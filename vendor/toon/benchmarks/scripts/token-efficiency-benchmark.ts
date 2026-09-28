@@ -1,0 +1,328 @@
+import type { Dataset } from '../src/types.ts'
+import * as fsp from 'node:fs/promises'
+import * as path from 'node:path'
+import * as prompts from '@clack/prompts'
+import { encode } from '../../packages/toon/src/index.ts'
+import { BENCHMARKS_DIR, ROOT_DIR } from '../src/constants.ts'
+import { TOKEN_EFFICIENCY_DATASETS } from '../src/datasets.ts'
+import { FORMATS, getFormat, supportsCSV } from '../src/formats.ts'
+import { createProgressBar, ensureDir, tokenize } from '../src/utils.ts'
+
+interface FormatMetrics {
+  name: string
+  tokens: number
+  savings: number
+  savingsPercent: number
+}
+
+interface BenchmarkResult {
+  dataset: Dataset
+  formats: FormatMetrics[]
+}
+
+const DATASET_ICONS: Record<string, string> = {
+  'tabular': '👥',
+  'nested': '🛒',
+  'analytics': '📈',
+  'github': '⭐',
+  'event-logs': '🧾',
+  'nested-config': '🧩',
+}
+
+const COMPARISON_FORMAT_ORDER = ['json-pretty', 'json-compact', 'yaml', 'xml'] as const
+
+const PROGRESS_BAR_WIDTH = 20
+const TOKEN_PADDING = 7
+
+const DEFAULT_DATASET_ICON = '📊'
+
+const DETAILED_EXAMPLE_DATASETS = ['github', 'analytics'] as const
+const GITHUB_REPO_LIMIT = 3
+const GITHUB_DESC_LIMIT = 80
+const ANALYTICS_METRICS_LIMIT = 5
+
+prompts.intro('Token Efficiency Benchmark')
+
+/** Formats a comparison line showing savings vs TOON. */
+function formatComparisonLine(format: FormatMetrics, isLast: boolean = false): string {
+  const label = getFormat(format.name).displayName
+  const signedPercent = format.savingsPercent >= 0
+    ? `−${format.savingsPercent.toFixed(1)}%`
+    : `+${Math.abs(format.savingsPercent).toFixed(1)}%`
+  const connector = isLast ? '└─' : '├─'
+  const tokenStr = format.tokens.toLocaleString('en-US').padStart(TOKEN_PADDING)
+
+  return `${connector} vs ${label.padEnd(13)} ${`(${signedPercent})`.padEnd(20)}   ${tokenStr} tokens`
+}
+
+function calculateTotalMetrics(datasets: BenchmarkResult[], formatNames: readonly string[]) {
+  const totalToonTokens = datasets.reduce((sum, r) => {
+    const toon = r.formats.find(f => f.name === 'toon')!
+    return sum + toon.tokens
+  }, 0)
+
+  const totals = formatNames.map((formatName) => {
+    const totalTokens = datasets.reduce((sum, r) => {
+      const format = r.formats.find(f => f.name === formatName)
+      return sum + (format?.tokens || 0)
+    }, 0)
+    const savings = totalTokens - totalToonTokens
+    const savingsPercent = (savings / totalTokens) * 100
+
+    return { name: formatName, tokens: totalTokens, savingsPercent }
+  })
+
+  return { totalToonTokens, totals }
+}
+
+function generateTotalLines(
+  totalToonTokens: number,
+  totals: { name: string, tokens: number, savingsPercent: number }[],
+  baselineFormat?: { name: string, tokens: number },
+) {
+  const separatorHalf = '─'.repeat(36)
+  const lines = [`${separatorHalf} Total ${separatorHalf}`]
+
+  if (baselineFormat) {
+    // Flat-only track with CSV baseline
+    const csvPercentage = Math.min(100, (baselineFormat.tokens / totalToonTokens) * 100)
+    const csvBar = createProgressBar(csvPercentage, 100, PROGRESS_BAR_WIDTH)
+    const csvStr = baselineFormat.tokens.toLocaleString('en-US').padStart(TOKEN_PADDING)
+    lines.push(`   CSV                 ${csvBar}   ${csvStr} tokens`)
+
+    const overheadPercent = ((totalToonTokens - baselineFormat.tokens) / baselineFormat.tokens) * 100
+    const toonBar = createProgressBar(100, 100, PROGRESS_BAR_WIDTH)
+    const toonStr = totalToonTokens.toLocaleString('en-US').padStart(TOKEN_PADDING)
+    lines.push(`   TOON                ${toonBar}   ${toonStr} tokens   (+${overheadPercent.toFixed(1)}% vs CSV)`)
+  }
+  else {
+    // Mixed-structure track
+    const totalPercentage = Math.min(100, (totalToonTokens / totals[0]!.tokens) * 100)
+    const totalBar = createProgressBar(totalPercentage, 100, PROGRESS_BAR_WIDTH)
+    const toonStr = totalToonTokens.toLocaleString('en-US').padStart(TOKEN_PADDING)
+    lines.push(`   TOON                ${totalBar}   ${toonStr} tokens`)
+  }
+
+  for (let i = 0; i < totals.length; i++) {
+    const format = totals[i]!
+    const isLast = i === totals.length - 1
+    lines.push(`   ${formatComparisonLine({
+      name: format.name,
+      tokens: format.tokens,
+      savings: 0, // Unused by `formatComparisonLine`.
+      savingsPercent: format.savingsPercent,
+    }, isLast)}`)
+  }
+
+  return lines.join('\n')
+}
+
+function generateDatasetChart(result: BenchmarkResult): string {
+  const { dataset, formats } = result
+  const toon = formats.find(f => f.name === 'toon')!
+  const jsonPretty = formats.find(f => f.name === 'json-pretty')!
+
+  const emoji = DATASET_ICONS[dataset.name] || DEFAULT_DATASET_ICON
+  const eligibility = dataset.metadata.tabularEligibility
+  const name = dataset.description
+
+  const percentage = Math.min(100, 100 - jsonPretty.savingsPercent)
+  const bar = createProgressBar(percentage, 100, PROGRESS_BAR_WIDTH)
+  const toonStr = toon.tokens.toLocaleString('en-US')
+
+  const line1 = `${emoji} ${name}  ┊  Tabular: ${eligibility}%`
+  const line2 = `   │`
+  const line3 = `   TOON                ${bar}   ${toonStr.padStart(TOKEN_PADDING)} tokens`
+
+  const comparisonLines = COMPARISON_FORMAT_ORDER.map((formatName, index, array) => {
+    const format = formats.find(f => f.name === formatName)
+    if (!format)
+      return undefined
+
+    return `   ${formatComparisonLine(format, index === array.length - 1)}`
+  }).filter(Boolean)
+
+  return [line1, line2, line3, ...comparisonLines].join('\n')
+}
+
+const results: BenchmarkResult[] = []
+
+for (const dataset of TOKEN_EFFICIENCY_DATASETS) {
+  const formatMetrics: FormatMetrics[] = []
+  const tokensByFormat: Record<string, number> = {}
+
+  for (const format of Object.values(FORMATS)) {
+    if (format.name === 'csv' && !supportsCSV(dataset))
+      continue
+
+    const formattedData = format.encode(dataset.data)
+    const tokens = tokenize(formattedData)
+    tokensByFormat[format.name] = tokens
+  }
+
+  const toonTokens = tokensByFormat.toon!
+  for (const [formatName, tokens] of Object.entries(tokensByFormat)) {
+    const savings = tokens - toonTokens
+    formatMetrics.push({
+      name: formatName,
+      tokens,
+      savings,
+      savingsPercent: formatName === 'toon' ? 0 : (savings / tokens) * 100,
+    })
+  }
+
+  results.push({
+    dataset,
+    formats: formatMetrics,
+  })
+}
+
+const mixedStructureDatasets = results.filter(r => !supportsCSV(r.dataset))
+const flatOnlyDatasets = results.filter(r => supportsCSV(r.dataset))
+
+const mixedCharts = mixedStructureDatasets
+  .map(result => generateDatasetChart(result))
+  .join('\n\n')
+
+const flatCharts = flatOnlyDatasets
+  .map((result) => {
+    const csv = result.formats.find(f => f.name === 'csv')
+    const toon = result.formats.find(f => f.name === 'toon')!
+
+    if (!csv)
+      return generateDatasetChart(result)
+
+    // Show CSV first and state TOON's overhead against it, since CSV is the
+    // cheaper baseline on flat data.
+    const { dataset } = result
+    const emoji = DATASET_ICONS[dataset.name] || DEFAULT_DATASET_ICON
+    const eligibility = dataset.metadata.tabularEligibility
+    const name = dataset.description
+
+    const csvPercentage = Math.min(100, (csv.tokens / toon.tokens) * 100)
+    const csvBar = createProgressBar(csvPercentage, 100, PROGRESS_BAR_WIDTH)
+    const csvStr = csv.tokens.toLocaleString('en-US')
+
+    const line1 = `${emoji} ${name}  ┊  Tabular: ${eligibility}%`
+    const line2 = `   │`
+    const line3 = `   CSV                 ${csvBar}   ${csvStr.padStart(TOKEN_PADDING)} tokens`
+
+    const toonOverhead = toon.tokens - csv.tokens
+    const toonOverheadPercent = (toonOverhead / csv.tokens) * 100
+    const toonBar = createProgressBar(100, 100, PROGRESS_BAR_WIDTH)
+    const toonStr = toon.tokens.toLocaleString('en-US')
+    const toonVsCSV = toonOverheadPercent >= 0
+      ? `(+${toonOverheadPercent.toFixed(1)}% vs CSV)`
+      : `(${toonOverheadPercent.toFixed(1)}% vs CSV)`
+    const toonLine = `   TOON                ${toonBar}   ${toonStr.padStart(TOKEN_PADDING)} tokens   ${toonVsCSV}`
+
+    const comparisonLines = COMPARISON_FORMAT_ORDER.map((formatName, index, array) => {
+      const format = result.formats.find(f => f.name === formatName)
+      if (!format)
+        return undefined
+
+      return `   ${formatComparisonLine(format, index === array.length - 1)}`
+    }).filter(Boolean)
+
+    return [line1, line2, line3, toonLine, ...comparisonLines].join('\n')
+  })
+  .join('\n\n')
+
+const { totalToonTokens: totalToonTokensMixed, totals: mixedTotals } = calculateTotalMetrics(mixedStructureDatasets, COMPARISON_FORMAT_ORDER)
+const mixedTotalLines = generateTotalLines(totalToonTokensMixed, mixedTotals)
+
+const { totalToonTokens: totalToonTokensFlat, totals: flatTotals } = calculateTotalMetrics(flatOnlyDatasets, COMPARISON_FORMAT_ORDER)
+const totalCSVTokensFlat = flatOnlyDatasets.reduce((sum, r) => {
+  const csv = r.formats.find(f => f.name === 'csv')
+  return sum + (csv?.tokens || 0)
+}, 0)
+const flatTotalLines = generateTotalLines(totalToonTokensFlat, flatTotals, { name: 'csv', tokens: totalCSVTokensFlat })
+
+const barChartSection = `
+#### Mixed-Structure Track
+
+Datasets with nested or semi-uniform structures. CSV excluded as it cannot properly represent these structures.
+
+\`\`\`
+${mixedCharts}
+
+${mixedTotalLines}
+\`\`\`
+
+#### Flat-Only Track
+
+Datasets with flat, fully tabular-eligible data where CSV is applicable.
+
+\`\`\`
+${flatCharts}
+
+${flatTotalLines}
+\`\`\`
+`.trim()
+
+const detailedExamples = results
+  .filter(r => DETAILED_EXAMPLE_DATASETS.includes(r.dataset.name as any))
+  .map((result, i, filtered) => {
+    let displayData = result.dataset.data
+
+    if (result.dataset.name === 'github') {
+      displayData = {
+        repositories: displayData.repositories.slice(0, GITHUB_REPO_LIMIT).map((repo: Record<string, any>) => ({
+          ...repo,
+          description: repo.description?.slice(0, GITHUB_DESC_LIMIT) + (repo.description?.length > GITHUB_DESC_LIMIT ? '…' : ''),
+        })),
+      }
+    }
+    else if (result.dataset.name === 'analytics') {
+      displayData = { metrics: displayData.metrics.slice(0, ANALYTICS_METRICS_LIMIT) }
+    }
+
+    const emoji = DATASET_ICONS[result.dataset.name] || DEFAULT_DATASET_ICON
+    const json = result.formats.find(f => f.name === 'json-pretty')!
+    const toon = result.formats.find(f => f.name === 'toon')!
+    const separator = i < filtered.length - 1 ? '---' : ''
+
+    return `
+#### ${emoji} ${result.dataset.description}
+
+**Savings:** ${json.savings.toLocaleString('en-US')} tokens (${json.savingsPercent.toFixed(1)}% reduction vs JSON)
+
+**JSON** (${json.tokens.toLocaleString('en-US')} tokens):
+
+\`\`\`json
+${JSON.stringify(displayData, undefined, 2)}
+\`\`\`
+
+**TOON** (${toon.tokens.toLocaleString('en-US')} tokens):
+
+\`\`\`
+${encode(displayData)}
+\`\`\`
+
+${separator}
+`.trim()
+  })
+  .join('\n\n')
+
+const markdown = `
+${barChartSection}
+
+Token counts use \`gpt-tokenizer\` with \`o200k_base\` encoding (GPT-5 tokenizer). Other providers tokenize differently, so absolute counts are tokenizer-specific; relative differences between formats hold directionally.
+
+<details>
+<summary><strong>Show detailed examples</strong></summary>
+
+${detailedExamples}
+
+</details>
+`.trimStart()
+
+prompts.log.message(barChartSection)
+
+const resultsDir = path.join(BENCHMARKS_DIR, 'results')
+await ensureDir(resultsDir)
+
+const outputFilePath = path.join(resultsDir, 'token-efficiency.md')
+await fsp.writeFile(outputFilePath, markdown, 'utf-8')
+
+prompts.log.success(`Report saved to \`${path.relative(ROOT_DIR, outputFilePath)}\``)
