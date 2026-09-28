@@ -73,6 +73,21 @@ function canonicalJson(value: unknown): string {
   return JSON.stringify(value)
 }
 
+/** Canonical string of a raw edn-data parse tree (keywords kept distinct, map key order ignored). */
+function canonicalRaw(value: any): string {
+  if (Array.isArray(value))
+    return `[${value.map(canonicalRaw).join(' ')}]`
+  if (value && typeof value === 'object' && Array.isArray(value.map))
+    return `{${value.map.map(([k, v]: [any, any]) => `${canonicalRaw(k)} ${canonicalRaw(v)}`).sort().join(' ')}}`
+  if (value && typeof value === 'object' && typeof value.key === 'string' && Object.keys(value).length === 1)
+    return `:${value.key}`
+  if (value && typeof value === 'object')
+    return `#other${JSON.stringify(value)}`
+  return JSON.stringify(typeof value === 'bigint' ? Number(value) : value)
+}
+
+const RAW_OPTS = { mapAs: 'doubleArray', keywordAs: 'object', listAs: 'object', setAs: 'object' } as any
+
 function countToonTabularHeaders(text: string): number {
   return (text.match(/\[\d+\]\{[^}]*\}:/g) ?? []).length
 }
@@ -97,7 +112,7 @@ function grade(target: string, reply: string, source: unknown) {
       const decoded = decodeEdn(block, { expandTables: expand })
       lossless = canonicalJson(decoded) === canonicalJson(source)
       const reference = FORMATS[target]!.encode(source)
-      canonical = lossless && canonicalJson(decodeEdn(block, { expandTables: false })) === canonicalJson(decodeEdn(reference, { expandTables: false }))
+      canonical = lossless && canonicalRaw(parseEDNString(block, RAW_OPTS)) === canonicalRaw(parseEDNString(reference, RAW_OPTS))
     }
   }
   catch (e) {
