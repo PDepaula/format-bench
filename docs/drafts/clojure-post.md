@@ -1,4 +1,4 @@
-<!-- DRAFT, not posted. Target: r/Clojure or ClojureVerse. Replace <repo-url> before posting. -->
+<!-- DRAFT, not posted. Target: r/Clojure or ClojureVerse. -->
 
 **Title:** Is EDN viable as an LLM data format? I benchmarked it against JSON and TOON
 
@@ -35,4 +35,4 @@ tokens, and use string keys (or validate keywords) when keys come from outside.
 Caveats: Claude models only, called through headless Claude Code rather than the raw API,
 and the generation check is 20 records per cell, so its intervals are wide. Everything is
 in the repo, including the raw replies, the deviations log and the review:
-<repo-url>
+https://github.com/PDepaula/format-bench

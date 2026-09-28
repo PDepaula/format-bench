@@ -1,4 +1,4 @@
-<!-- DRAFT, not posted. Target: kunchenguid's firstmate / axi community. Replace <repo-url> before posting. -->
+<!-- DRAFT, not posted. Target: kunchenguid's firstmate / axi community. -->
 
 **What a format benchmark says about TOON as the axi default**
 
@@ -34,4 +34,4 @@ format the model writes more reliably (EDN maps did; JSON was not part of this c
 
 Caveats: Claude models only, called through headless Claude Code; the benchmark's payloads
 are larger and more tabular than typical axi output, so the token numbers may not transfer
-directly to small status blocks. Full report and raw data: <repo-url>
+directly to small status blocks. Full report and raw data: https://github.com/PDepaula/format-bench
