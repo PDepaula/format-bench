@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>format-bench results</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daisyui@5.5.19/daisyui.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daisyui@5.5.19/themes.css">
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.2.4/dist/index.global.js"></script>
+<script>
+  // ?theme=light|dark pins the theme (used for the README screenshots); otherwise follow the OS.
+  (function () {
+    var t = new URLSearchParams(location.search).get('theme');
+    if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+  })();
+</script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  :where(.grid, .flex) > * { min-width: 0; }
+
+  /* Chart tokens: dataviz reference palette (validated: slots 1-3, light + dark). */
+  :root {
+    color-scheme: light;
+    --page: #f9f9f7;
+    --surface-1: #fcfcfb;
+    --ink-1: #0b0b0b;
+    --ink-2: #52514e;
+    --ink-3: #75736d;
+    --grid: #e1e0d9;
+    --axis: #c3c2b7;
+    --ring: rgba(11,11,11,0.10);
+    --band: rgba(42,120,214,0.07);
+    --s-edn-maps: #2a78d6;
+    --s-edn-table: #eb6834;
+    --s-toon: #1baf7a;
+    --good: #006300;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) {
+      color-scheme: dark;
+      --page: #0d0d0d;
+      --surface-1: #1a1a19;
+      --ink-1: #ffffff;
+      --ink-2: #c3c2b7;
+      --ink-3: #9a988f;
+      --grid: #2c2c2a;
+      --axis: #383835;
+      --ring: rgba(255,255,255,0.10);
+      --band: rgba(57,135,229,0.12);
+      --s-edn-maps: #3987e5;
+      --s-edn-table: #d95926;
+      --s-toon: #199e70;
+      --good: #0ca30c;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --page: #0d0d0d;
+    --surface-1: #1a1a19;
+    --ink-1: #ffffff;
+    --ink-2: #c3c2b7;
+    --ink-3: #9a988f;
+    --grid: #2c2c2a;
+    --axis: #383835;
+    --ring: rgba(255,255,255,0.10);
+    --band: rgba(57,135,229,0.12);
+    --s-edn-maps: #3987e5;
+    --s-edn-table: #d95926;
+    --s-toon: #199e70;
+    --good: #0ca30c;
+  }
+
+  html, body { background: var(--page); color: var(--ink-1); }
+  body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; margin: 0; }
+  .page { max-width: 1280px; margin: 0 auto; padding: 32px 32px 28px; }
+  .panel { background: var(--surface-1); border: 1px solid var(--ring); border-radius: 14px; padding: 18px 20px 14px; }
+  .eyebrow { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); font-weight: 600; }
+  .ink-2 { color: var(--ink-2); }
+  .ink-3 { color: var(--ink-3); }
+  h1 { font-size: 30px; line-height: 1.15; font-weight: 700; letter-spacing: -0.01em; margin: 6px 0 8px; }
+  .lede { font-size: 17px; line-height: 1.45; color: var(--ink-2); max-width: 980px; }
+  .lede b { color: var(--ink-1); }
+  h2 { font-size: 16px; font-weight: 650; margin: 0; }
+  .sub { font-size: 13px; color: var(--ink-2); margin: 3px 0 0; line-height: 1.4; }
+  .tile-label { font-size: 12.5px; color: var(--ink-2); line-height: 1.3; }
+  .tile-value { font-size: 30px; font-weight: 650; line-height: 1.1; margin: 6px 0 4px; }
+  .tile-note { font-size: 12.5px; color: var(--ink-3); line-height: 1.35; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12.5px; color: var(--ink-2); margin: 10px 0 2px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .sw { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+  .sw-line { width: 16px; height: 0; border-top: 2px solid var(--ink-2); display: inline-block; }
+  svg text { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .tick { font-size: 11px; fill: var(--ink-3); font-variant-numeric: tabular-nums; }
+  .cat { font-size: 12.5px; fill: var(--ink-2); }
+  .cat-strong { font-size: 12.5px; fill: var(--ink-1); font-weight: 600; }
+  .val { font-size: 11px; fill: var(--ink-2); font-variant-numeric: tabular-nums; }
+  .note { font-size: 11px; fill: var(--ink-3); }
+  .mark { cursor: default; }
+  .mark:hover, .mark:focus { opacity: .8; outline: none; }
+  #tip { position: fixed; pointer-events: none; background: var(--ink-1); color: var(--surface-1); font-size: 12px; line-height: 1.35; padding: 6px 9px; border-radius: 6px; opacity: 0; transition: opacity .08s; max-width: 280px; z-index: 10; }
+  .shape { border-top: 3px solid var(--axis); }
+  .shape h3 { font-size: 14px; font-weight: 650; margin: 0 0 2px; }
+  .shape .pick { font-size: 20px; font-weight: 650; margin: 2px 0 4px; }
+  .shape p { font-size: 12.5px; color: var(--ink-2); line-height: 1.4; margin: 0; }
+  .trust { font-size: 12.5px; color: var(--ink-2); display: flex; flex-wrap: wrap; gap: 6px 18px; }
+  .trust b { color: var(--ink-1); font-weight: 600; }
+  details.tableview { margin-top: 8px; font-size: 12px; color: var(--ink-2); }
+  details.tableview summary { cursor: pointer; color: var(--ink-3); }
+  details.tableview table { border-collapse: collapse; margin-top: 6px; width: 100%; font-variant-numeric: tabular-nums; }
+  details.tableview th, details.tableview td { border-bottom: 1px solid var(--grid); padding: 3px 6px; text-align: right; }
+  details.tableview th:first-child, details.tableview td:first-child { text-align: left; }
+  @media (max-width: 900px) { .page { padding: 20px 16px; } h1 { font-size: 24px; } }
+</style>
+</head>
+<body>
+<div class="page" id="capture">
+
+  <div class="eyebrow">format-bench · pre-registered · 3 Claude models × 3 seeds × 244 questions</div>
+  <h1>Is EDN a real contender against TOON and JSON as an LLM data format?</h1>
+  <p class="lede"><b>As a readable format, yes:</b> Claude models answer questions about EDN data as accurately as about compact JSON.
+    <b>As a token-saving format, no:</b> EDN usually costs more tokens than compact JSON, and TOON still wins uniform tables.
+    Small models also <b>write</b> EDN more reliably than TOON.</p>
+
+  <!-- Headline tiles -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-5">
+    <div class="panel">
+      <div class="tile-label">Comprehension, EDN-maps − compact JSON</div>
+      <div class="tile-value">+0.5 pp</div>
+      <div class="tile-note">Haiku+Sonnet pooled, 95% CI [−1.7, +2.5]. Equivalent within ±5 pp for every model.</div>
+    </div>
+    <div class="panel">
+      <div class="tile-label">Tokens, EDN-maps vs compact JSON</div>
+      <div class="tile-value">+6 to +10%</div>
+      <div class="tile-note">Larger on o200k, Qwen3 and Claude Haiku 4.5. Only 1–2% smaller on the Claude 5 tokenizer.</div>
+    </div>
+    <div class="panel">
+      <div class="tile-label">Tokens, EDN-table vs TOON on uniform tables</div>
+      <div class="tile-value">+6.5 to +15%</div>
+      <div class="tile-note">Larger on every tokenizer, mostly string quoting. EDN-table is still 24–35% below compact JSON.</div>
+    </div>
+    <div class="panel">
+      <div class="tile-label">Haiku 4.5 writes it back losslessly</div>
+      <div class="tile-value">95% vs 50%</div>
+      <div class="tile-note">EDN-maps vs TOON (62% once TOON's quoting rules are in the prompt). Opus: 100% for both.</div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+    <!-- Chart 1: comprehension -->
+    <div class="panel">
+      <h2>Comprehension: EDN ties compact JSON; TOON sits about 2 pp higher</h2>
+      <p class="sub">Accuracy difference vs compact JSON (percentage points), 239 non-structural questions, mean of 3 seeds. Whiskers: 95% two-stage bootstrap over datasets. TOON's lead over EDN is suggestive, not robust.</p>
+      <div class="legend">
+        <span><i class="sw" style="background:var(--s-edn-maps)"></i>EDN-maps</span>
+        <span><i class="sw" style="background:var(--s-edn-table)"></i>EDN-table</span>
+        <span><i class="sw" style="background:var(--s-toon)"></i>TOON</span>
+        <span><i class="sw" style="background:var(--band);outline:1px solid var(--grid)"></i>±5 pp equivalence band</span>
+      </div>
+      <svg id="c-acc" role="img" aria-label="Accuracy difference versus compact JSON by model and format"></svg>
+      <details class="tableview"><summary>Table view</summary><div id="t-acc"></div></details>
+    </div>
+
+    <!-- Chart 3: generation -->
+    <div class="panel">
+      <h2>Generation: small models write EDN more reliably than TOON</h2>
+      <p class="sub">Lossless round-trip rate when the model writes records in the format (20 records × 3 samples per cell). Whiskers: 95% bootstrap over records.</p>
+      <div class="legend">
+        <span><i class="sw" style="background:var(--s-edn-maps)"></i>EDN-maps</span>
+        <span><i class="sw" style="background:var(--s-edn-table)"></i>EDN-table</span>
+        <span><i class="sw" style="background:var(--s-toon)"></i>TOON (upstream primer)</span>
+        <span><i class="sw" style="background:repeating-linear-gradient(135deg,var(--s-toon) 0 2px,transparent 2px 4.5px);outline:1px solid var(--s-toon)"></i>TOON + quoting rules</span>
+      </div>
+      <svg id="c-gen" role="img" aria-label="Generation lossless round-trip rate by model and format"></svg>
+      <details class="tableview"><summary>Table view</summary><div id="t-gen"></div></details>
+    </div>
+  </div>
+
+  <!-- Chart 2: tokens -->
+  <div class="panel mt-4">
+    <h2>Tokens: EDN is not a token-saver; TOON wins uniform tables</h2>
+    <p class="sub">Token count relative to compact JSON (0 = same size; left = cheaper) on the 8 token-benchmark datasets. Each tokenizer is counted separately and never averaged. Claude 5 = Sonnet 5 and Opus 5.5 (identical counts).</p>
+    <div class="legend">
+      <span><i class="sw" style="background:var(--s-edn-maps)"></i>EDN-maps</span>
+      <span><i class="sw" style="background:var(--s-edn-table)"></i>EDN-table</span>
+      <span><i class="sw" style="background:var(--s-toon)"></i>TOON</span>
+      <span><i class="sw-line"></i>compact JSON (baseline)</span>
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <svg id="c-tok-flat" role="img" aria-label="Token delta vs compact JSON, uniform tables"></svg>
+      <svg id="c-tok-mixed" role="img" aria-label="Token delta vs compact JSON, mixed and nested data"></svg>
+    </div>
+    <details class="tableview"><summary>Table view</summary><div id="t-tok"></div></details>
+  </div>
+
+  <!-- By data shape -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+    <div class="panel shape">
+      <h3 class="ink-2">Uniform tables</h3>
+      <div class="pick">TOON <span class="ink-3" style="font-size:14px;font-weight:500">(or CSV if flat)</span></div>
+      <p>Fewest tokens on every tokenizer; no detectable accuracy difference between formats.</p>
+    </div>
+    <div class="panel shape">
+      <h3 class="ink-2">Deeply nested config</h3>
+      <div class="pick">No winner</div>
+      <p>All four within about 7% on tokens, and the order flips by tokenizer. Accuracy is at the ceiling.</p>
+    </div>
+    <div class="panel shape">
+      <h3 class="ink-2">Mixed data</h3>
+      <div class="pick">It depends</div>
+      <p>Semi-uniform logs: EDN-table beats TOON by 6–13%, but compact JSON is cheaper still on 3 of 4 tokenizers. Keyed / grouped data: TOON is 34–90% cheaper.</p>
+    </div>
+  </div>
+
+  <div class="panel mt-4 trust">
+    <span><b>Pre-registered</b> in PLAN.md before any result existed</span>
+    <span><b>Adversarially reviewed</b>: 15 points, all answered</span>
+    <span><b>Lossless</b>: every EDN encoding round-trips through two parsers</span>
+    <span><b>13,176</b> graded answers, 0 failed calls</span>
+    <span><b>$62.23</b> logged spend</span>
+  </div>
+</div>
+<div id="tip" role="tooltip"></div>
+
+<script>
+const DATA = {
+  // results/analysis/paired.csv, subset overall-excl-structural, B = json-compact
+  acc: [
+    { level: 'Haiku 4.5',            f: 'edn-maps',  d: 0.1, lo: -2.6, hi: 2.8 },
+    { level: 'Haiku 4.5',            f: 'edn-table', d: 1.1, lo: -1.6, hi: 4.4 },
+    { level: 'Haiku 4.5',            f: 'toon',      d: 2.8, lo: -0.1, hi: 6.8 },
+    { level: 'Sonnet 5',             f: 'edn-maps',  d: 0.8, lo: -2.1, hi: 3.7 },
+    { level: 'Sonnet 5',             f: 'edn-table', d: 0.3, lo: -2.6, hi: 3.0 },
+    { level: 'Sonnet 5',             f: 'toon',      d: 2.2, lo: -0.6, hi: 5.4 },
+    { level: 'Opus 5.5 *',           f: 'edn-maps',  d: 0.1, lo: -0.7, hi: 0.9 },
+    { level: 'Opus 5.5 *',           f: 'edn-table', d: -0.4, lo: -1.3, hi: 0.3 },
+    { level: 'Opus 5.5 *',           f: 'toon',      d: 0.1, lo: -0.4, hi: 0.7 },
+    { level: 'Haiku + Sonnet pooled', f: 'edn-maps',  d: 0.5, lo: -1.7, hi: 2.5 },
+    { level: 'Haiku + Sonnet pooled', f: 'edn-table', d: 0.7, lo: -1.5, hi: 3.1 },
+    { level: 'Haiku + Sonnet pooled', f: 'toon',      d: 2.5, lo: 0.4, hi: 5.3 },
+  ],
+  // results/analysis/generation_clustered.csv (lossless round-trip %)
+  gen: [
+    { model: 'Haiku 4.5', f: 'edn-maps', v: 95.0, lo: 85.0, hi: 100.0 },
+    { model: 'Haiku 4.5', f: 'edn-table', v: 83.3, lo: 66.7, hi: 96.7 },
+    { model: 'Haiku 4.5', f: 'toon', v: 50.0, lo: 30.0, hi: 70.0 },
+    { model: 'Haiku 4.5', f: 'toon-long', v: 61.7, lo: 41.7, hi: 81.7 },
+    { model: 'Sonnet 5', f: 'edn-maps', v: 95.0, lo: 85.0, hi: 100.0 },
+    { model: 'Sonnet 5', f: 'edn-table', v: 83.3, lo: 66.7, hi: 98.3 },
+    { model: 'Sonnet 5', f: 'toon', v: 68.3, lo: 48.3, hi: 86.7 },
+    { model: 'Sonnet 5', f: 'toon-long', v: 83.3, lo: 66.7, hi: 98.3 },
+    { model: 'Opus 5.5', f: 'edn-maps', v: 100.0, lo: 100.0, hi: 100.0 },
+    { model: 'Opus 5.5', f: 'edn-table', v: 95.0, lo: 85.0, hi: 100.0 },
+    { model: 'Opus 5.5', f: 'toon', v: 100.0, lo: 100.0, hi: 100.0 },
+    { model: 'Opus 5.5', f: 'toon-long', v: 100.0, lo: 100.0, hi: 100.0 },
+  ],
+  // results/analysis/tokens_long.csv, token-benchmark totals per track; % vs json-compact
+  tok: {
+    flat: [
+      { t: 'o200k', json: 104908, 'toon': 68030, 'edn-maps': 112328, 'edn-table': 73660 },
+      { t: 'Qwen3', json: 126980, 'toon': 90087, 'edn-maps': 134403, 'edn-table': 95933 },
+      { t: 'Claude Haiku 4.5', json: 122028, 'toon': 77278, 'edn-maps': 134863, 'edn-table': 88871 },
+      { t: 'Claude 5', json: 167287, 'toon': 97650, 'edn-maps': 165104, 'edn-table': 109226 },
+    ],
+    mixed: [
+      { t: 'o200k', json: 260451, 'toon': 264734, 'edn-maps': 275989, 'edn-table': 272841 },
+      { t: 'Qwen3', json: 304582, 'toon': 313503, 'edn-maps': 324622, 'edn-table': 321474 },
+      { t: 'Claude Haiku 4.5', json: 288794, 'toon': 289804, 'edn-maps': 307744, 'edn-table': 303391 },
+      { t: 'Claude 5', json: 404123, 'toon': 359824, 'edn-maps': 395293, 'edn-table': 390825 },
+    ],
+  },
+};
+const NAME = { 'edn-maps': 'EDN-maps', 'edn-table': 'EDN-table', 'toon': 'TOON', 'toon-long': 'TOON + quoting rules' };
+const COLOR = { 'edn-maps': 'var(--s-edn-maps)', 'edn-table': 'var(--s-edn-table)', 'toon': 'var(--s-toon)', 'toon-long': 'url(#hatch)' };
+const NS = 'http://www.w3.org/2000/svg';
+const fmt = (x, d = 1) => (x > 0 ? '+' : x < 0 ? '−' : '±') + Math.abs(x).toFixed(d);
+
+function el(parent, tag, attrs = {}, text) {
+  const e = document.createElementNS(NS, tag);
+  for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+  if (text != null) e.textContent = text;
+  parent.appendChild(e);
+  return e;
+}
+function svgInit(id, w, h) {
+  const s = document.getElementById(id);
+  s.setAttribute('viewBox', `0 0 ${w} ${h}`);
+  s.setAttribute('width', '100%');
+  s.style.display = 'block';
+  s.innerHTML = '';
+  return s;
+}
+function roundTop(x, y, w, h, r) { // column, rounded data-end at top, square at baseline
+  r = Math.min(r, h, w / 2);
+  return `M${x},${y + h}V${y + r}Q${x},${y} ${x + r},${y}H${x + w - r}Q${x + w},${y} ${x + w},${y + r}V${y + h}Z`;
+}
+function roundEnd(x0, x1, y, h, r) { // horizontal bar from baseline x0 to data-end x1
+  const w = Math.abs(x1 - x0); r = Math.min(r, w, h / 2);
+  if (x1 >= x0) return `M${x0},${y}H${x1 - r}Q${x1},${y} ${x1},${y + r}V${y + h - r}Q${x1},${y + h} ${x1 - r},${y + h}H${x0}Z`;
+  return `M${x0},${y}H${x1 + r}Q${x1},${y} ${x1},${y + r}V${y + h - r}Q${x1},${y + h} ${x1 + r},${y + h}H${x0}Z`;
+}
+const tip = document.getElementById('tip');
+function hover(node, html) {
+  node.classList.add('mark');
+  node.setAttribute('tabindex', '0');
+  const show = (ev) => {
+    tip.innerHTML = html; tip.style.opacity = 1;
+    const r = node.getBoundingClientRect();
+    const x = ev && ev.clientX != null ? ev.clientX : r.left + r.width / 2;
+    const y = ev && ev.clientY != null ? ev.clientY : r.top;
+    tip.style.left = Math.min(x + 12, innerWidth - 290) + 'px';
+    tip.style.top = (y + 14) + 'px';
+  };
+  node.addEventListener('mousemove', show);
+  node.addEventListener('focus', () => show());
+  node.addEventListener('mouseleave', () => tip.style.opacity = 0);
+  node.addEventListener('blur', () => tip.style.opacity = 0);
+}
+function table(id, head, rows) {
+  document.getElementById(id).innerHTML = '<table><thead><tr>' + head.map(h => `<th>${h}</th>`).join('') +
+    '</tr></thead><tbody>' + rows.map(r => '<tr>' + r.map(c => `<td>${c}</td>`).join('') + '</tr>').join('') + '</tbody></table>';
+}
+
+// ---- Chart 1: comprehension forest plot
+(function () {
+  const W = 600, L = 150, R = 20, T = 8, rowH = 17, gap = 14;
+  const levels = [...new Set(DATA.acc.map(d => d.level))];
+  const fmts = ['edn-maps', 'edn-table', 'toon'];
+  const plotH = levels.length * fmts.length * rowH + (levels.length - 1) * gap;
+  const H = T + plotH + 58;
+  const s = svgInit('c-acc', W, H);
+  const x = v => L + (v + 6) / 14 * (W - L - R); // domain -6..+8
+  // equivalence band
+  el(s, 'rect', { x: x(-5), y: T - 4, width: x(5) - x(-5), height: plotH + 8, fill: 'var(--band)' });
+  for (let v = -6; v <= 8; v += 2) {
+    el(s, 'line', { x1: x(v), x2: x(v), y1: T - 4, y2: T + plotH + 4, stroke: v === 0 ? 'var(--ink-2)' : 'var(--grid)', 'stroke-width': v === 0 ? 1.5 : 1 });
+    el(s, 'text', { x: x(v), y: T + plotH + 18, 'text-anchor': 'middle', class: 'tick' }, v === 0 ? '0' : fmt(v, 0));
+  }
+  el(s, 'text', { x: x(0), y: T + plotH + 34, 'text-anchor': 'middle', class: 'note' }, '← worse than compact JSON · better →');
+  let y = T;
+  levels.forEach((lv, i) => {
+    const rows = DATA.acc.filter(d => d.level === lv);
+    el(s, 'text', { x: 0, y: y + rowH * 1.5 + 4, class: lv.includes('pooled') ? 'cat-strong' : 'cat' }, lv);
+    fmts.forEach((f, j) => {
+      const d = rows.find(r => r.f === f);
+      const cy = y + j * rowH + rowH / 2;
+      const g = el(s, 'g');
+      el(g, 'rect', { x: L, y: cy - rowH / 2, width: W - L - R, height: rowH, fill: 'transparent' });
+      el(g, 'line', { x1: x(d.lo), x2: x(d.hi), y1: cy, y2: cy, stroke: COLOR[f], 'stroke-width': 2, 'stroke-linecap': 'round' });
+      el(g, 'circle', { cx: x(d.d), cy, r: 5, fill: COLOR[f], stroke: 'var(--surface-1)', 'stroke-width': 2 });
+      hover(g, `<b>${lv.replace(' *', '')} · ${NAME[f]}</b><br>${fmt(d.d)} pp vs compact JSON<br>95% CI [${fmt(d.lo)}, ${fmt(d.hi)}]`);
+    });
+    y += fmts.length * rowH + gap;
+  });
+  el(s, 'text', { x: 0, y: H - 2, class: 'note' }, '* Opus 5.5 ran with hidden reasoning that could not be switched off (near the ceiling).');
+  table('t-acc', ['model level', 'format', 'Δ pp vs JSON', '95% CI (datasets)'],
+    DATA.acc.map(d => [d.level.replace(' *', ''), NAME[d.f], fmt(d.d), `[${fmt(d.lo)}, ${fmt(d.hi)}]`]));
+})();
+
+// ---- Chart 3: generation grouped columns
+(function () {
+  const W = 600, L = 36, R = 8, T = 18, plotH = 262, B = 34;
+  const H = T + plotH + B;
+  const s = svgInit('c-gen', W, H);
+  const defs = el(s, 'defs');
+  const p = el(defs, 'pattern', { id: 'hatch', patternUnits: 'userSpaceOnUse', width: 5, height: 5, patternTransform: 'rotate(45)' });
+  el(p, 'rect', { width: 5, height: 5, fill: 'var(--surface-1)' });
+  el(p, 'rect', { width: 2.2, height: 5, fill: 'var(--s-toon)' });
+  const y = v => T + plotH - v / 100 * plotH;
+  for (let v = 0; v <= 100; v += 25) {
+    el(s, 'line', { x1: L, x2: W - R, y1: y(v), y2: y(v), stroke: v === 0 ? 'var(--axis)' : 'var(--grid)', 'stroke-width': 1 });
+    el(s, 'text', { x: L - 6, y: y(v) + 4, 'text-anchor': 'end', class: 'tick' }, v + '%');
+  }
+  const models = ['Haiku 4.5', 'Sonnet 5', 'Opus 5.5'];
+  const fmts = ['edn-maps', 'edn-table', 'toon', 'toon-long'];
+  const band = (W - L - R) / models.length, bw = 24, gp = 2;
+  const groupW = fmts.length * bw + (fmts.length - 1) * gp;
+  models.forEach((m, i) => {
+    const gx = L + i * band + (band - groupW) / 2;
+    el(s, 'text', { x: L + i * band + band / 2, y: T + plotH + 20, 'text-anchor': 'middle', class: 'cat-strong' }, m);
+    fmts.forEach((f, j) => {
+      const d = DATA.gen.find(r => r.model === m && r.f === f);
+      const bx = gx + j * (bw + gp);
+      const g = el(s, 'g');
+      el(g, 'rect', { x: bx - 1, y: T, width: bw + 2, height: plotH, fill: 'transparent' });
+      el(g, 'path', { d: roundTop(bx, y(d.v), bw, y(0) - y(d.v), 4), fill: COLOR[f] });
+      if (d.hi > d.lo) el(g, 'line', { x1: bx + bw / 2, x2: bx + bw / 2, y1: y(d.lo), y2: y(d.hi), stroke: 'var(--ink-2)', 'stroke-width': 1.25, opacity: .75 });
+      el(g, 'text', { x: bx + bw / 2, y: y(Math.max(d.v, d.hi)) - 5, 'text-anchor': 'middle', class: 'val' }, Math.round(d.v));
+      hover(g, `<b>${m} · ${NAME[f]}</b><br>${d.v.toFixed(1)}% lossless round-trip<br>95% CI [${d.lo.toFixed(1)}, ${d.hi.toFixed(1)}]`);
+    });
+  });
+  table('t-gen', ['model', 'format', 'lossless %', '95% CI (records)'],
+    DATA.gen.map(d => [d.model, NAME[d.f], d.v.toFixed(1), `[${d.lo.toFixed(1)}, ${d.hi.toFixed(1)}]`]));
+})();
+
+// ---- Chart 2: token deltas, two panels
+function tokenPanel(id, rows, title, sub) {
+  const W = 590, L = 128, R = 44, T = 40, rowH = 13, gp = 2, gap = 16;
+  const fmts = ['toon', 'edn-table', 'edn-maps'];
+  const groupH = fmts.length * rowH + (fmts.length - 1) * gp;
+  const plotH = rows.length * groupH + (rows.length - 1) * gap;
+  const H = T + plotH + 30;
+  const s = svgInit(id, W, H);
+  el(s, 'text', { x: 0, y: 14, class: 'cat-strong' }, title);
+  el(s, 'text', { x: 0, y: 30, class: 'note' }, sub);
+  const x = v => L + (v + 45) / 60 * (W - L - R); // domain -45..+15
+  for (let v = -40; v <= 10; v += 10) {
+    el(s, 'line', { x1: x(v), x2: x(v), y1: T - 4, y2: T + plotH + 4, stroke: v === 0 ? 'var(--ink-2)' : 'var(--grid)', 'stroke-width': v === 0 ? 1.5 : 1 });
+    el(s, 'text', { x: x(v), y: T + plotH + 18, 'text-anchor': 'middle', class: 'tick' }, v === 0 ? 'JSON' : fmt(v, 0) + '%');
+  }
+  rows.forEach((r, i) => {
+    const gy = T + i * (groupH + gap);
+    el(s, 'text', { x: 0, y: gy + groupH / 2 + 4, class: 'cat' }, r.t);
+    fmts.forEach((f, j) => {
+      const pct = 100 * (r[f] - r.json) / r.json;
+      const by = gy + j * (rowH + gp);
+      const g = el(s, 'g');
+      el(g, 'rect', { x: L, y: by - 1, width: W - L - R, height: rowH + 2, fill: 'transparent' });
+      el(g, 'path', { d: roundEnd(x(0), x(pct), by, rowH, 4), fill: COLOR[f] });
+      const lx = pct >= 0 ? x(pct) + 5 : x(pct) - 5;
+      el(g, 'text', { x: lx, y: by + rowH - 2.5, 'text-anchor': pct >= 0 ? 'start' : 'end', class: 'val' }, fmt(pct) + '%');
+      hover(g, `<b>${r.t} · ${NAME[f]}</b><br>${r[f].toLocaleString()} tokens vs ${r.json.toLocaleString()} compact JSON<br>${fmt(pct)}%`);
+    });
+  });
+}
+tokenPanel('c-tok-flat', DATA.tok.flat, 'Uniform tables (flat track)', 'tabular · analytics · GitHub repos');
+tokenPanel('c-tok-mixed', DATA.tok.mixed, 'Mixed and nested data (mixed track)', 'event logs · keyed · nested · nested config · grouped contacts');
+(function () {
+  const rows = [];
+  for (const tr of ['flat', 'mixed']) for (const r of DATA.tok[tr]) {
+    const p = f => fmt(100 * (r[f] - r.json) / r.json) + '%';
+    rows.push([tr, r.t, r.json.toLocaleString(), p('toon'), p('edn-maps'), p('edn-table')]);
+  }
+  table('t-tok', ['track', 'tokenizer', 'compact JSON tokens', 'TOON', 'EDN-maps', 'EDN-table'], rows);
+})();
+</script>
+</body>
+</html>
