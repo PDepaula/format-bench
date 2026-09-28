@@ -1,0 +1,2029 @@
+diff --git a/tools/audit_sample.py b/tools/audit_sample.py
+new file mode 100644
+index 0000000..a077621
+--- /dev/null
++++ b/tools/audit_sample.py
+@@ -0,0 +1,32 @@
++"""Draws the pre-registered grader-audit sample (PLAN.md §7): 30 uniformly
++random graded answers per format (seed 777, across models and seeds), plus
++context for hand-checking. Writes results/audit/audit_sample.csv.
++
++The hand verdicts live in results/audit/audit_verdicts.csv (written by hand
++after reading every sampled row)."""
++import csv
++import json
++import random
++from pathlib import Path
++
++ROOT = Path(__file__).resolve().parent.parent
++rows = list(csv.DictReader(open(ROOT / "results/accuracy/graded.csv")))
++questions = {q["id"]: q for q in json.loads((ROOT / "results/accuracy/questions.json").read_text())}
++rng = random.Random(777)
++out = []
++for fmt in ["json-compact", "toon", "edn-maps", "edn-table", "edn-table-primer", "csv"]:
++    pool = [r for r in rows if r["format"] == fmt]
++    for r in rng.sample(pool, 30):
++        out.append({
++            "audit_id": f"{fmt}-{len(out)}",
++            "format": fmt, "model": r["model"], "seed": r["seed"], "question_id": r["question_id"],
++            "answer_type": r["answer_type"], "question": questions[r["question_id"]]["prompt"],
++            "expected": r["expected"], "answer": r["answer"], "graded_correct": r["correct"],
++            "error_class": r["error_class"],
++        })
++(ROOT / "results/audit").mkdir(parents=True, exist_ok=True)
++with open(ROOT / "results/audit/audit_sample.csv", "w", newline="") as f:
++    w = csv.DictWriter(f, fieldnames=list(out[0]))
++    w.writeheader()
++    w.writerows(out)
++print(len(out))
+diff --git a/tools/check_manifest.py b/tools/check_manifest.py
+new file mode 100644
+index 0000000..60dab93
+--- /dev/null
++++ b/tools/check_manifest.py
+@@ -0,0 +1,45 @@
++"""Fairness assertions on results/accuracy/tasks.jsonl (PLAN.md §7):
++same questions/batches/order for every format within a seed, every question
++answered once per seed per applicable format, and prompts identical apart from
++the primer line, format label, fence and data block."""
++import json
++from collections import defaultdict
++from pathlib import Path
++
++ROOT = Path(__file__).resolve().parent.parent
++tasks = [json.loads(l) for l in (ROOT / "results/accuracy/tasks.jsonl").open()]
++enc = json.loads((ROOT / "build/encodings.json").read_text())
++questions = {q["id"]: q for q in json.loads((ROOT / "results/accuracy/questions.json").read_text())}
++
++by_batch = defaultdict(dict)
++for t in tasks:
++    by_batch[t["batch_id"]][t["format"]] = t
++
++for bid, fmts in by_batch.items():
++    qsets = {tuple(t["question_ids"]) for t in fmts.values()}
++    assert len(qsets) == 1, bid
++    skeletons = set()
++    for fmt, t in fmts.items():
++        data_fmt = "edn-table" if fmt == "edn-table-primer" else fmt
++        data = enc["accuracy"][t["dataset"]][data_fmt]
++        p = t["prompt"]
++        assert p.count(data) == 1, (bid, fmt)
++        p = p.replace(data, "<DATA>")
++        primer = enc["primers"][fmt]
++        assert p.startswith(primer + "\n\n"), (bid, fmt)
++        p = p[len(primer):]
++        label = "edn-table" if fmt == "edn-table-primer" else fmt
++        fence = {"json-compact": "json", "toon": "toon", "csv": "csv"}.get(fmt, "edn")
++        p = p.replace(f"data in {label} format", "data in <LABEL> format", 1).replace(f"```{fence}\n<DATA>", "```<FENCE>\n<DATA>", 1)
++        skeletons.add(p)
++    assert len(skeletons) == 1, (bid, skeletons)
++
++for seed in (1, 2, 3):
++    for fmt in ("json-compact", "toon", "edn-maps", "edn-table", "edn-table-primer", "csv"):
++        ids = [q for t in tasks if t["seed"] == seed and t["format"] == fmt for q in t["question_ids"]]
++        expected = [q for q in questions if fmt != "csv" or questions[q]["track"] == "flat"]
++        assert sorted(ids) == sorted(expected), (seed, fmt)
++        assert len(ids) == len(set(ids))
++    orders = [[q for t in tasks if t["seed"] == seed and t["format"] == "toon" for q in t["question_ids"]] for seed in (1, 2, 3)]
++assert orders[0] != orders[1] != orders[2]
++print(f"manifest OK: {len(tasks)} tasks, {len(by_batch)} batches")
+diff --git a/tools/claude_cli.py b/tools/claude_cli.py
+new file mode 100644
+index 0000000..3f58d65
+--- /dev/null
++++ b/tools/claude_cli.py
+@@ -0,0 +1,60 @@
++"""Headless Claude Code subagent calls (`claude -p`), configured to be as close
++to a bare API call as the CLI allows: empty system prompt, no tools, no
++settings/MCP/skills, no thinking, no prompt caching. Prompt goes via stdin
++(argv is capped at 128 KB per argument)."""
++import json
++import os
++import subprocess
++import time
++
++MODEL_ALIASES = {"haiku": "haiku", "sonnet": "sonnet", "opus": "opus"}
++BASE_ARGS = [
++    "claude", "-p",
++    "--system-prompt", "",
++    "--tools", "",
++    "--setting-sources", "",
++    "--strict-mcp-config",
++    "--disable-slash-commands",
++    "--no-session-persistence",
++    "--output-format", "json",
++    "--effort", "low",
++]
++# The parent session exports CLAUDE_EFFORT=high; pin the lowest effort for every model
++# (Opus 5.5 still uses adaptive thinking that the CLI cannot switch off; see DEVIATIONS D5).
++ENV = dict(os.environ, MAX_THINKING_TOKENS="0", DISABLE_PROMPT_CACHING="1", CLAUDE_EFFORT="low")
++
++
++def call(model: str, prompt: str, retries: int = 3, timeout: int = 600) -> dict:
++    """Returns a dict with result text, usage, served model id(s), cost, error."""
++    last_err = None
++    for attempt in range(retries + 1):
++        t0 = time.time()
++        try:
++            proc = subprocess.run(
++                BASE_ARGS + ["--model", MODEL_ALIASES[model]],
++                input=prompt, capture_output=True, text=True, env=ENV, timeout=timeout,
++                cwd="/tmp",
++            )
++            data = json.loads(proc.stdout)
++            if data.get("is_error") or data.get("subtype") != "success":
++                raise RuntimeError(f"cli error: {str(data)[:500]}")
++            u = data["usage"]
++            return {
++                "ok": True,
++                "text": data.get("result", ""),
++                "input_total": u["input_tokens"] + u.get("cache_creation_input_tokens", 0) + u.get("cache_read_input_tokens", 0),
++                "input_tokens": u["input_tokens"],
++                "cache_creation": u.get("cache_creation_input_tokens", 0),
++                "cache_read": u.get("cache_read_input_tokens", 0),
++                "output_tokens": u["output_tokens"],
++                "thinking_tokens": (u.get("output_tokens_details") or {}).get("thinking_tokens"),
++                "served_models": sorted(data.get("modelUsage", {}).keys()),
++                "cost_usd": data.get("total_cost_usd", 0.0),
++                "duration_ms": data.get("duration_ms"),
++                "attempts": attempt + 1,
++                "wall_s": round(time.time() - t0, 2),
++            }
++        except Exception as e:  # noqa: BLE001
++            last_err = f"{type(e).__name__}: {e}"[:800]
++            time.sleep(2 ** attempt * 3)
++    return {"ok": False, "error": last_err, "attempts": retries + 1}
+diff --git a/tools/claude_tokens.py b/tools/claude_tokens.py
+new file mode 100644
+index 0000000..491168d
+--- /dev/null
++++ b/tools/claude_tokens.py
+@@ -0,0 +1,60 @@
++"""Claude token counts derived from CLI usage (the token-counting API needs
++ANTHROPIC_API_KEY, which is not set, so it was skipped).
++
++tokens(text) = input_total(PREFIX + "\n" + text) - input_total(PREFIX)
++Usage: python3 tools/claude_tokens.py <model> <groups: accuracy,tokens>
++Appends to results/tokens/claude_raw.jsonl (resumable).
++"""
++import json
++import sys
++from concurrent.futures import ThreadPoolExecutor
++from pathlib import Path
++
++sys.path.insert(0, str(Path(__file__).parent))
++import claude_cli  # noqa: E402
++
++ROOT = Path(__file__).resolve().parent.parent
++ENC = json.loads((ROOT / "build" / "encodings.json").read_text())
++RAW = ROOT / "results" / "tokens" / "claude_raw.jsonl"
++PREFIX = "Reply with only OK.\nDATA:"
++CONTENDERS = ["json-compact", "toon", "csv", "edn-maps", "edn-table"]
++
++model = sys.argv[1]
++groups = sys.argv[2].split(",")
++
++done = set()
++if RAW.exists():
++    for line in RAW.read_text().splitlines():
++        r = json.loads(line)
++        if r.get("ok"):
++            done.add((r["model"], r["group"], r["dataset"], r["format"], r.get("rep", 0)))
++
++jobs = []
++for rep in range(3):
++    jobs.append(("baseline", "-", "-", rep, PREFIX))
++for fmt, text in ENC["primers"].items():
++    jobs.append(("primer", "-", fmt, 0, PREFIX + "\n" + text))
++for g in groups:
++    for ds, fmts in ENC[g].items():
++        for fmt in CONTENDERS:
++            if fmt in fmts:
++                jobs.append((g, ds, fmt, 0, PREFIX + "\n" + fmts[fmt]))
++jobs = [j for j in jobs if (model, j[0], j[1], j[2], j[3]) not in done]
++print(f"{model}: {len(jobs)} calls")
++
++
++def run(job):
++    g, ds, fmt, rep, prompt = job
++    r = claude_cli.call(model, prompt)
++    r.update(model=model, group=g, dataset=ds, format=fmt, rep=rep, prompt_chars=len(prompt))
++    r.pop("text", None) if r.get("ok") and len(r.get("text", "")) < 20 else None
++    return r
++
++
++with ThreadPoolExecutor(max_workers=6) as ex, RAW.open("a") as f:
++    for r in ex.map(run, jobs):
++        f.write(json.dumps(r) + "\n")
++        f.flush()
++        if not r.get("ok"):
++            print("FAILED", r)
++print("done")
+diff --git a/tools/external_check.py b/tools/external_check.py
+new file mode 100644
+index 0000000..b225b2d
+--- /dev/null
++++ b/tools/external_check.py
+@@ -0,0 +1,29 @@
++"""External check (PLAN.md §4): our batched Haiku accuracy vs upstream's
++published single-question Haiku 4.5 results for the formats both ran.
++Writes results/analysis/external_check.csv."""
++import csv
++import json
++from collections import defaultdict
++from pathlib import Path
++
++ROOT = Path(__file__).resolve().parent.parent
++up = json.load(open(ROOT / "vendor/toon/benchmarks/results/accuracy/models/claude-haiku-4-5-20251001"))
++ours = defaultdict(list)
++for r in csv.DictReader(open(ROOT / "results/accuracy/graded.csv")):
++    if r["model"] == "haiku":
++        ours[(r["format"], r["question_id"])].append(int(r["correct"]))
++out = []
++for fmt in ("json-compact", "toon", "csv"):
++    u = {r["questionId"]: int(r["isCorrect"]) for r in up if r["format"] == fmt}
++    qids = [q for q in u if (fmt, q) in ours]
++    up_acc = sum(u[q] for q in qids) / len(qids)
++    our_acc = sum(sum(ours[(fmt, q)]) / len(ours[(fmt, q)]) for q in qids) / len(qids)
++    agree = sum((sum(ours[(fmt, q)]) / len(ours[(fmt, q)]) > 0.5) == bool(u[q]) for q in qids) / len(qids)
++    out.append({"format": fmt, "n_questions": len(qids), "upstream_single_question": round(up_acc, 4),
++                "ours_batched_mean3seeds": round(our_acc, 4), "per_question_agreement_majority": round(agree, 4)})
++with open(ROOT / "results/analysis/external_check.csv", "w", newline="") as f:
++    w = csv.DictWriter(f, fieldnames=list(out[0]))
++    w.writeheader()
++    w.writerows(out)
++for r in out:
++    print(r)
+diff --git a/tools/gen_edn_crosscheck.py b/tools/gen_edn_crosscheck.py
+new file mode 100644
+index 0000000..de8f71c
+--- /dev/null
++++ b/tools/gen_edn_crosscheck.py
+@@ -0,0 +1,28 @@
++"""Cross-checks EDN parse validity of generated blocks with the Python edn_format
++parser (PLAN.md §5 names both edn-data and edn_format). Adds column
++parse_valid_edn_format to results/generation/graded.csv (TOON rows: blank)."""
++import csv
++import json
++from pathlib import Path
++
++import edn_format
++
++ROOT = Path(__file__).resolve().parent.parent
++blocks = json.loads((ROOT / "results/generation/extracted_blocks.json").read_text())
++path = ROOT / "results/generation/graded.csv"
++rows = list(csv.DictReader(path.open()))
++for r in rows:
++    if r["format"] == "toon":
++        r["parse_valid_edn_format"] = ""
++        continue
++    try:
++        edn_format.loads(blocks[f"{r['model']}/{r['task_id']}"])
++        r["parse_valid_edn_format"] = "1"
++    except Exception:  # noqa: BLE001
++        r["parse_valid_edn_format"] = "0"
++with path.open("w", newline="") as f:
++    w = csv.DictWriter(f, fieldnames=list(rows[0]))
++    w.writeheader()
++    w.writerows(rows)
++dis = [(r["model"], r["task_id"], r["parse_valid"], r["parse_valid_edn_format"]) for r in rows if r["format"] != "toon" and r["parse_valid"] != r["parse_valid_edn_format"]]
++print("edn-data vs edn_format disagreements:", dis)
+diff --git a/tools/run_accuracy.py b/tools/run_accuracy.py
+new file mode 100644
+index 0000000..a12876a
+--- /dev/null
++++ b/tools/run_accuracy.py
+@@ -0,0 +1,59 @@
++"""Runs a task manifest through headless Claude Code subagents.
++
++Usage: python3 tools/run_accuracy.py <haiku|sonnet|opus> [workers] [accuracy|generation]
++Appends one JSON line per task to results/raw/accuracy/<model>.jsonl (resumable:
++tasks with an ok result are skipped)."""
++import json
++import random
++import sys
++import threading
++from concurrent.futures import ThreadPoolExecutor, as_completed
++from pathlib import Path
++
++sys.path.insert(0, str(Path(__file__).parent))
++import claude_cli  # noqa: E402
++
++ROOT = Path(__file__).resolve().parent.parent
++model = sys.argv[1]
++workers = int(sys.argv[2]) if len(sys.argv) > 2 else 8
++kind = sys.argv[3] if len(sys.argv) > 3 else "accuracy"
++out_path = ROOT / "results" / "raw" / kind / f"{model}.jsonl"
++out_path.parent.mkdir(parents=True, exist_ok=True)
++
++tasks = [json.loads(l) for l in (ROOT / "results" / kind / "tasks.jsonl").open()]
++done = set()
++if out_path.exists():
++    for line in out_path.read_text().splitlines():
++        r = json.loads(line)
++        if r.get("ok"):
++            done.add(r["task_id"])
++todo = [t for t in tasks if t["task_id"] not in done]
++random.Random(f"order-{model}").shuffle(todo)  # execution order only; prompts are fixed
++print(f"{model}: {len(todo)} of {len(tasks)} tasks to run", flush=True)
++
++lock = threading.Lock()
++
++
++def run(t):
++    r = claude_cli.call(model, t["prompt"])
++    rec = {k: v for k, v in t.items() if k != "prompt"}
++    rec.update(model=model, **r)
++    return rec
++
++
++n = 0
++cost = 0.0
++with ThreadPoolExecutor(max_workers=workers) as ex, out_path.open("a") as f:
++    futures = [ex.submit(run, t) for t in todo]
++    for fut in as_completed(futures):
++        rec = fut.result()
++        with lock:
++            f.write(json.dumps(rec, ensure_ascii=False) + "\n")
++            f.flush()
++        n += 1
++        cost += rec.get("cost_usd", 0) or 0
++        if not rec.get("ok"):
++            print("FAILED", rec["task_id"], rec.get("error"), flush=True)
++        if n % 25 == 0:
++            print(f"{model}: {n}/{len(todo)} cost=${cost:.2f}", flush=True)
++print(f"{model}: finished {n} cost=${cost:.2f}", flush=True)
+diff --git a/tools/setup_tokenizers.sh b/tools/setup_tokenizers.sh
+new file mode 100755
+index 0000000..747b58b
+--- /dev/null
++++ b/tools/setup_tokenizers.sh
+@@ -0,0 +1,26 @@
++#!/usr/bin/env bash
++# Rebuilds the tokenizer files used by tools/tokens.py without huggingface.co or
++# openaipublic.blob.core.windows.net (both blocked by this environment's egress policy).
++#  - o200k_base: rebuilt from the ranks bundled in the benchmark's gpt-tokenizer
++#    dependency; tiktoken verifies the result against its pinned sha256.
++#  - Qwen3: tokenizer.json from npm package @lenml/tokenizer-qwen3@3.7.2.
++set -euo pipefail
++ROOT="$(cd "$(dirname "$0")/.." && pwd)"
++OUT="$ROOT/build/tokenizers"
++mkdir -p "$OUT"
++cd "$ROOT/vendor/toon/benchmarks"
++cat > "$OUT/dump-o200k.mjs" <<'JS'
++import ranks from './node_modules/gpt-tokenizer/esm/bpeRanks/o200k_base.js'
++import fs from 'node:fs'
++const enc = new TextEncoder()
++const lines = ranks.map((t, i) => Buffer.from(typeof t === 'string' ? enc.encode(t) : Uint8Array.from(t)).toString('base64') + ' ' + i)
++fs.writeFileSync(process.argv[2], lines.join('\n') + '\n')
++JS
++cp "$OUT/dump-o200k.mjs" ./.dump-o200k.mjs
++node ./.dump-o200k.mjs "$OUT/o200k_base.tiktoken"; rm ./.dump-o200k.mjs
++sha256sum "$OUT/o200k_base.tiktoken"
++cd "$OUT"
++npm pack @lenml/tokenizer-qwen3@3.7.2 >/dev/null 2>&1
++tar xzf lenml-tokenizer-qwen3-3.7.2.tgz package/models/tokenizer.json
++mv package/models/tokenizer.json qwen3-tokenizer.json && rm -rf package lenml-tokenizer-qwen3-3.7.2.tgz
++sha256sum qwen3-tokenizer.json
+diff --git a/tools/stats.py b/tools/stats.py
+new file mode 100644
+index 0000000..a5ccac9
+--- /dev/null
++++ b/tools/stats.py
+@@ -0,0 +1,194 @@
++"""Accuracy statistics for the EDN study (PLAN.md §6).
++
++Reads results/accuracy/graded.csv and writes:
++  results/analysis/accuracy_summary.csv   model × format × subset, cluster-bootstrap CI
++  results/analysis/paired.csv             pre-registered paired comparisons
++  results/analysis/failures.csv           failure classes per model × format
++Grade column: `correct` (primary, upstream checker) or `correct_lenient` via --lenient.
++"""
++import argparse
++import csv
++import itertools
++from collections import defaultdict
++from pathlib import Path
++
++import numpy as np
++from scipy.stats import binomtest
++
++ROOT = Path(__file__).resolve().parent.parent
++OUT = ROOT / "results" / "analysis"
++MODELS = ["haiku", "sonnet", "opus"]
++FORMATS = ["json-compact", "toon", "edn-maps", "edn-table", "edn-table-primer", "csv"]
++PRIMARY = [
++    ("edn-maps", "json-compact"),
++    ("edn-table", "toon"),
++    ("edn-table-primer", "edn-table"),
++    ("edn-table-primer", "toon"),
++    ("edn-table-primer", "json-compact"),
++    ("edn-maps", "toon"),
++]
++EXTRA = [("toon", "json-compact"), ("edn-table", "json-compact"), ("edn-table", "edn-maps"), ("csv", "toon"), ("csv", "edn-table"), ("csv", "json-compact")]
++MARGIN = 0.05
++B = 10_000
++
++
++def subsets(q):
++    out = ["overall", f"track:{q['track']}", f"shape:{q['shape']}"]
++    if q["shape"] != "structural-validation":
++        out.append("overall-excl-structural")
++    out.append(f"type:{q['type']}")
++    return out
++
++
++def holm(pvals):
++    order = sorted(range(len(pvals)), key=lambda i: pvals[i])
++    adj = [0.0] * len(pvals)
++    running = 0.0
++    m = len(pvals)
++    for rank, i in enumerate(order):
++        running = max(running, min(1.0, (m - rank) * pvals[i]))
++        adj[i] = running
++    return adj
++
++
++def verdict(lo, hi):
++    inside = lo >= -MARGIN and hi <= MARGIN
++    if lo > 0:
++        return "A better (within ±5pp)" if inside else "A better"
++    if hi < 0:
++        return "B better (within ±5pp)" if inside else "B better"
++    if lo >= -MARGIN and hi <= MARGIN:
++        return "equivalent (±5pp)"
++    return "no detectable difference"
++
++
++def main():
++    ap = argparse.ArgumentParser()
++    ap.add_argument("--lenient", action="store_true")
++    ap.add_argument("--graded", default=str(ROOT / "results/accuracy/graded.csv"))
++    ap.add_argument("--suffix", default="")
++    ap.add_argument("--exclude-toolcall-batches", action="store_true",
++                    help="sensitivity: drop (model, batch) pairs where any format's reply contained a fake tool call")
++    args = ap.parse_args()
++    col = "correct_lenient" if args.lenient else "correct"
++    suffix = args.suffix or ("_lenient" if args.lenient else "")
++    OUT.mkdir(parents=True, exist_ok=True)
++
++    rows = list(csv.DictReader(open(args.graded)))
++    if args.exclude_toolcall_batches:
++        bad = {(r["model"], r["batch_id"]) for r in rows if r.get("fake_tool_call") == "1"}
++        bad_q = {(r["model"], r["seed"], r["question_id"]) for r in rows if (r["model"], r["batch_id"]) in bad}
++        rows = [r for r in rows if (r["model"], r["seed"], r["question_id"]) not in bad_q]
++        print(f"excluded {len(bad)} (model, batch) pairs")
++    qmeta = {}
++    # score[(model, format)][qid] -> list of 0/1 over seeds
++    score = defaultdict(lambda: defaultdict(list))
++    fails = defaultdict(lambda: defaultdict(int))
++    for r in rows:
++        qmeta[r["question_id"]] = r
++        score[(r["model"], r["format"])][r["question_id"]].append(int(r[col]))
++        fails[(r["model"], r["format"])][r["error_class"] or "correct"] += 1
++    models = [m for m in MODELS if any(k[0] == m for k in score)]
++    rng = np.random.default_rng(12345)
++
++    def qscore(model, fmt, qids):
++        """per-question mean over seeds (and models if model == 'pooled')"""
++        ms = models if model == "pooled" else [model]
++        out = []
++        for q in qids:
++            vals = [v for m in ms for v in score[(m, fmt)].get(q, [])]
++            out.append(np.mean(vals) if vals else np.nan)
++        return np.array(out)
++
++    def majority(model, fmt, qids):
++        ms = models if model == "pooled" else [model]
++        out = []
++        for q in qids:
++            vals = [v for m in ms for v in score[(m, fmt)].get(q, [])]
++            out.append(1 if vals and np.mean(vals) > 0.5 else 0)
++        return np.array(out)
++
++    subset_q = defaultdict(list)
++    for q, meta in qmeta.items():
++        for s in subsets(meta):
++            subset_q[s].append(q)
++    subset_q = {k: sorted(v) for k, v in subset_q.items()}
++
++    # --- accuracy summary
++    with open(OUT / f"accuracy_summary{suffix}.csv", "w", newline="") as f:
++        w = csv.writer(f)
++        w.writerow(["model", "format", "subset", "n_questions", "n_answers", "accuracy", "ci_lo", "ci_hi", "seed1", "seed2", "seed3"])
++        for model in models + ["pooled"]:
++            for fmt in FORMATS:
++                for sname, qids in subset_q.items():
++                    qids = [q for q in qids if score[(models[0], fmt)].get(q)] if fmt == "csv" else qids
++                    if not qids:
++                        continue
++                    s = qscore(model, fmt, qids)
++                    keep = ~np.isnan(s)
++                    qids = [q for q, k in zip(qids, keep) if k]
++                    s = s[keep]
++                    if not len(s):
++                        continue
++                    idx = rng.integers(0, len(s), size=(B, len(s)))
++                    boots = s[idx].mean(axis=1)
++                    ms = models if model == "pooled" else [model]
++                    seeds = []
++                    for si in range(3):
++                        vals = [score[(m, fmt)][q][si] for m in ms for q in qids if len(score[(m, fmt)][q]) > si]
++                        seeds.append(round(float(np.mean(vals)), 4) if vals else "")
++                    n_ans = sum(len(score[(m, fmt)][q]) for m in ms for q in qids)
++                    w.writerow([model, fmt, sname, len(qids), n_ans, round(float(s.mean()), 4),
++                                round(float(np.percentile(boots, 2.5)), 4), round(float(np.percentile(boots, 97.5)), 4), *seeds])
++
++    # --- paired comparisons
++    out_rows = []
++    for model in models + ["pooled"]:
++        for a, b in PRIMARY + EXTRA:
++            for sname, qids in subset_q.items():
++                if "csv" in (a, b):
++                    qids = [q for q in qids if qmeta[q]["track"] == "flat"]
++                if not qids:
++                    continue
++                sa, sb = qscore(model, a, qids), qscore(model, b, qids)
++                keep = ~np.isnan(sa) & ~np.isnan(sb)
++                qids = [q for q, k in zip(qids, keep) if k]
++                sa, sb = sa[keep], sb[keep]
++                if not len(qids):
++                    continue
++                d = sa - sb
++                idx = rng.integers(0, len(d), size=(B, len(d)))
++                boots = d[idx].mean(axis=1)
++                lo, hi = float(np.percentile(boots, 2.5)), float(np.percentile(boots, 97.5))
++                ma, mb = majority(model, a, qids), majority(model, b, qids)
++                n01 = int(((ma == 1) & (mb == 0)).sum())
++                n10 = int(((ma == 0) & (mb == 1)).sum())
++                p = binomtest(n01, n01 + n10, 0.5).pvalue if n01 + n10 else 1.0
++                out_rows.append({
++                    "model": model, "A": a, "B": b, "family": "primary" if (a, b) in PRIMARY else "extra",
++                    "subset": sname, "n_questions": len(qids),
++                    "acc_A": round(float(sa.mean()), 4), "acc_B": round(float(sb.mean()), 4),
++                    "diff": round(float(d.mean()), 4), "ci_lo": round(lo, 4), "ci_hi": round(hi, 4),
++                    "mcnemar_A_only": n01, "mcnemar_B_only": n10, "mcnemar_p": round(float(p), 5),
++                    "verdict": verdict(lo, hi),
++                })
++    fam = [r for r in out_rows if r["family"] == "primary" and r["subset"] == "overall"]
++    for r, adj in zip(fam, holm([r["mcnemar_p"] for r in fam])):
++        r["holm_p_primary_overall"] = round(adj, 5)
++    with open(OUT / f"paired{suffix}.csv", "w", newline="") as f:
++        fields = list(out_rows[0].keys()) + ["holm_p_primary_overall"]
++        w = csv.DictWriter(f, fieldnames=list(dict.fromkeys(fields)))
++        w.writeheader()
++        w.writerows(out_rows)
++
++    with open(OUT / f"failures{suffix}.csv", "w", newline="") as f:
++        classes = ["correct", "comprehension", "format-lenient", "format-missing", "call-failed"]
++        w = csv.writer(f)
++        w.writerow(["model", "format", *classes])
++        for (m, fmt), c in sorted(fails.items()):
++            w.writerow([m, fmt, *[c.get(k, 0) for k in classes]])
++    print("wrote", OUT)
++
++
++if __name__ == "__main__":
++    main()
+diff --git a/tools/test_edn_roundtrip.py b/tools/test_edn_roundtrip.py
+new file mode 100644
+index 0000000..4f2d2e9
+--- /dev/null
++++ b/tools/test_edn_roundtrip.py
+@@ -0,0 +1,88 @@
++"""Second, independent losslessness gate: decode every EDN encoding with the
++Python `edn_format` parser and compare with the source JSON (key order
++included). Run after `node scripts/edn-dump-encodings.ts`.
++
++    python3 -m pytest tools/test_edn_roundtrip.py -q
++"""
++import json
++from pathlib import Path
++
++import edn_format
++import pytest
++from edn_format import ImmutableDict, ImmutableList, Keyword
++
++ROOT = Path(__file__).resolve().parent.parent
++ENC = json.loads((ROOT / "build" / "encodings.json").read_text())
++
++
++def to_json(value, expand_tables):
++    if isinstance(value, Keyword):
++        raise AssertionError(f"keyword used as a value: {value}")
++    if isinstance(value, (ImmutableList, list, tuple)):
++        return [to_json(v, expand_tables) for v in value]
++    if isinstance(value, (ImmutableDict, dict)):
++        items = list(value.items())
++        names = []
++        for k, _ in items:
++            if isinstance(k, Keyword):
++                names.append(k.name)
++            elif isinstance(k, str):
++                names.append(k)
++            else:
++                raise AssertionError(f"bad key {k!r}")
++        if expand_tables and names == ["cols", "rows"] and all(isinstance(k, Keyword) for k, _ in items):
++            cols = [c.name if isinstance(c, Keyword) else c for c in value[Keyword("cols")]]
++            rows = value[Keyword("rows")]
++            out = []
++            for row in rows:
++                assert len(row) == len(cols), "ragged table row"
++                out.append({c: to_json(v, expand_tables) for c, v in zip(cols, row)})
++            return out
++        return {n: to_json(v, expand_tables) for n, (_, v) in zip(names, items)}
++    if isinstance(value, bool) or value is None or isinstance(value, str):
++        return value
++    if isinstance(value, (int, float)):
++        return value
++    raise AssertionError(f"unsupported {type(value)}: {value!r}")
++
++
++def canon(x):
++    # key order preserved; ints and integral floats compare equal as in JSON
++    return json.dumps(x, ensure_ascii=False, sort_keys=False)
++
++
++CASES = []
++for group in ("accuracy", "tokens"):
++    for name, fmts in ENC[group].items():
++        for fmt in ("edn-maps", "edn-table", "edn-table-oneline", "edn-maps-lines"):
++            if fmt in fmts:
++                CASES.append((group, name, fmt))
++
++
++@pytest.mark.parametrize("group,name,fmt", CASES)
++def test_roundtrip(group, name, fmt):
++    meta = ENC["meta"][f"{group}/{name}"]
++    if meta.get("corruption") not in (None, "control"):
++        pytest.skip("corrupted variant is intentionally lossy")
++    text = ENC[group][name][fmt]
++    decoded = to_json(edn_format.loads(text), expand_tables=fmt.startswith("edn-table"))
++    source = ENC["sources"][group][name]
++    assert canon(decoded) == canon(source)
++
++
++def test_generation_records_roundtrip():
++    import subprocess
++
++    # generation records are covered by the vitest suite; here we re-check the
++    # edn_format side using encodings produced by the same encoder.
++    out = subprocess.run(
++        ["node", "scripts/edn-encode-stdin.ts"],
++        cwd=ROOT / "vendor" / "toon" / "benchmarks",
++        input=(ROOT / "generation" / "records.json").read_text(),
++        capture_output=True, text=True, check=True,
++    )
++    records = json.loads((ROOT / "generation" / "records.json").read_text())
++    enc = json.loads(out.stdout)
++    for rec, e in zip(records, enc):
++        assert canon(to_json(edn_format.loads(e["edn-maps"]), False)) == canon(rec["data"]), rec["id"]
++        assert canon(to_json(edn_format.loads(e["edn-table"]), True)) == canon(rec["data"]), rec["id"]
+diff --git a/tools/tok.py b/tools/tok.py
+new file mode 100644
+index 0000000..72bbf54
+--- /dev/null
++++ b/tools/tok.py
+@@ -0,0 +1,42 @@
++"""Tokenizer loaders. Run tools/setup_tokenizers.sh first."""
++import hashlib
++import os
++import shutil
++from functools import lru_cache
++from pathlib import Path
++
++ROOT = Path(__file__).resolve().parent.parent
++TOK_DIR = ROOT / "build" / "tokenizers"
++O200K_URL = "https://openaipublic.blob.core.windows.net/encodings/o200k_base.tiktoken"
++
++
++@lru_cache(maxsize=None)
++def o200k():
++    """tiktoken's own o200k_base, fed the rebuilt file through its cache.
++
++    tiktoken checks the file against its pinned sha256, so this is the exact
++    official encoding or it raises."""
++    cache = TOK_DIR / "tiktoken-cache"
++    cache.mkdir(parents=True, exist_ok=True)
++    target = cache / hashlib.sha1(O200K_URL.encode()).hexdigest()
++    if not target.exists():
++        shutil.copy(TOK_DIR / "o200k_base.tiktoken", target)
++    os.environ["TIKTOKEN_CACHE_DIR"] = str(cache)
++    import tiktoken
++
++    return tiktoken.get_encoding("o200k_base")
++
++
++@lru_cache(maxsize=None)
++def qwen3():
++    from tokenizers import Tokenizer
++
++    return Tokenizer.from_file(str(TOK_DIR / "qwen3-tokenizer.json"))
++
++
++def count_o200k(text: str) -> int:
++    return len(o200k().encode(text, disallowed_special=()))
++
++
++def count_qwen3(text: str) -> int:
++    return len(qwen3().encode(text, add_special_tokens=False).ids)
+diff --git a/tools/token_report.py b/tools/token_report.py
+new file mode 100644
+index 0000000..999eb08
+--- /dev/null
++++ b/tools/token_report.py
+@@ -0,0 +1,140 @@
++"""Token tables (per tokenizer, per track, per dataset) and primer break-even.
++
++Writes results/analysis/tokens_*.csv and results/analysis/tokens.md (tables
++pasted into REPORT.md)."""
++import csv
++import json
++import math
++from collections import defaultdict
++from pathlib import Path
++
++ROOT = Path(__file__).resolve().parent.parent
++OUT = ROOT / "results" / "analysis"
++OUT.mkdir(parents=True, exist_ok=True)
++FORMATS = ["json-compact", "toon", "edn-maps", "edn-table", "csv", "json-pretty", "yaml", "xml"]
++CONTENDERS = ["json-compact", "toon", "edn-maps", "edn-table", "csv"]
++
++rows = list(csv.DictReader(open(ROOT / "results/tokens/token_counts.csv")))
++primers = {r["format"]: r for r in csv.DictReader(open(ROOT / "results/tokens/primers.csv"))}
++
++# Claude counts from CLI usage deltas
++craw = [json.loads(l) for l in open(ROOT / "results/tokens/claude_raw.jsonl")]
++claude = defaultdict(dict)  # (model) -> {(group, dataset, format): tokens}
++base = {}
++for r in craw:
++    if r["ok"] and r["group"] == "baseline":
++        base.setdefault(r["model"], set()).add(r["input_total"])
++for m, b in base.items():
++    assert len(b) == 1, f"baseline not constant for {m}: {b}"
++base = {m: next(iter(b)) for m, b in base.items()}
++for r in craw:
++    if r["ok"] and r["group"] != "baseline":
++        # PREFIX + "\n" + text  minus  PREFIX  (the "\n" is inside the delta; ±1 token)
++        claude[r["model"]][(r["group"], r["dataset"], r["format"])] = r["input_total"] - base[r["model"]]
++
++TOKENIZERS = ["o200k", "qwen3", "claude-haiku-4.5", "claude-sonnet-5", "claude-opus-5.5"]
++CMAP = {"claude-haiku-4.5": "haiku", "claude-sonnet-5": "sonnet", "claude-opus-5.5": "opus"}
++
++
++def count(tk, group, ds, fmt):
++    if tk in ("o200k", "qwen3"):
++        for r in rows:
++            if r["group"] == group and r["dataset"] == ds and r["format"] == fmt:
++                return int(r[tk])
++        return None
++    return claude[CMAP[tk]].get((group, ds, fmt))
++
++
++def primer_count(tk, fmt):
++    if tk in ("o200k", "qwen3"):
++        return int(primers[fmt][tk])
++    return claude[CMAP[tk]].get(("primer", "-", fmt))
++
++
++datasets = defaultdict(dict)
++for r in rows:
++    datasets[r["group"]][r["dataset"]] = r["track"]
++
++md = []
++long_rows = []
++for group in ("tokens", "accuracy"):
++    for tk in TOKENIZERS:
++        fmts = FORMATS if tk in ("o200k", "qwen3") else CONTENDERS
++        have = [ds for ds in datasets[group] if count(tk, group, ds, "json-compact") is not None]
++        if not have:
++            continue
++        md.append(f"\n#### {group} datasets — {tk}\n")
++        md.append("| dataset | track | " + " | ".join(fmts) + " | EDN-maps vs JSON-c | EDN-table vs TOON |")
++        md.append("|---" * (len(fmts) + 4) + "|")
++        totals = defaultdict(lambda: defaultdict(int))
++        for ds in sorted(have, key=lambda d: (datasets[group][d], d)):
++            tr = datasets[group][ds]
++            vals = {f: count(tk, group, ds, f) for f in fmts}
++            for f, v in vals.items():
++                if v is not None:
++                    totals[tr][f] += v
++                    long_rows.append({"group": group, "tokenizer": tk, "dataset": ds, "track": tr, "format": f, "tokens": v})
++            em = (vals["edn-maps"] / vals["json-compact"] - 1) * 100
++            et = (vals["edn-table"] / vals["toon"] - 1) * 100
++            md.append(f"| {ds} | {tr} | " + " | ".join(f"{vals[f]:,}" if vals[f] is not None else "–" for f in fmts) + f" | {em:+.1f}% | {et:+.1f}% |")
++        for tr in ("flat", "mixed"):
++            t = totals[tr]
++            em = (t["edn-maps"] / t["json-compact"] - 1) * 100
++            et = (t["edn-table"] / t["toon"] - 1) * 100
++            md.append(f"| **total {tr}** | {tr} | " + " | ".join(f"**{t[f]:,}**" if f in t else "–" for f in fmts) + f" | **{em:+.1f}%** | **{et:+.1f}%** |")
++
++with open(OUT / "tokens_long.csv", "w", newline="") as f:
++    w = csv.DictWriter(f, fieldnames=list(long_rows[0]))
++    w.writeheader()
++    w.writerows(long_rows)
++
++# primers
++md.append("\n#### Primer lines (tokens, prepended to every call)\n")
++md.append("| format | " + " | ".join(TOKENIZERS) + " |")
++md.append("|---" * (len(TOKENIZERS) + 1) + "|")
++for fmt in ["json-compact", "toon", "csv", "edn-maps", "edn-table", "edn-table-primer"]:
++    md.append(f"| {fmt} | " + " | ".join(str(primer_count(tk, fmt)) for tk in TOKENIZERS) + " |")
++
++# break-even (o200k, qwen3 only: prefix series were not sent to Claude)
++be = defaultdict(lambda: defaultdict(dict))
++for r in csv.DictReader(open(ROOT / "results/tokens/breakeven_counts.csv")):
++    for tk in ("o200k", "qwen3"):
++        be[(r["family"], tk)][int(r["n"])][r["format"]] = int(r[tk])
++md.append("\n#### Primer break-even (payload size in records)\n")
++md.append("Cost of a call = primer line + data block. `edn-table+P` = LONG primer + EDN-table data. Break-even = smallest n in the grid where edn-table+P ≤ the comparator (\"never\" if not reached by the largest n).\n")
++md.append("| family | tokenizer | vs JSON-c (no primer) | vs JSON-c (+its primer) | vs TOON (+its primer) | vs TOON (no primer) | vs EDN-table (short primer) | per-record saving vs JSON-c | per-record Δ vs TOON |")
++md.append("|---" * 9 + "|")
++be_rows = []
++for (fam, tk), series in sorted(be.items()):
++    P = int(primers["edn-table-primer"][tk])
++    pj, pt, ps = int(primers["json-compact"][tk]), int(primers["toon"][tk]), int(primers["edn-table"][tk])
++    ns = sorted(series)
++
++    def first(pred):
++        for n in ns:
++            if pred(series[n]):
++                return n
++        return "never"
++    cmp = {
++        "json_noprimer": first(lambda s: P + s["edn-table"] <= s["json-compact"]),
++        "json_primer": first(lambda s: P + s["edn-table"] <= pj + s["json-compact"]),
++        "toon_primer": first(lambda s: P + s["edn-table"] <= pt + s["toon"]),
++        "toon_noprimer": first(lambda s: P + s["edn-table"] <= s["toon"]),
++        "edn_short": first(lambda s: P + s["edn-table"] <= ps + s["edn-table"]),
++    }
++    nmax = ns[-1]
++    per_json = (series[nmax]["json-compact"] - series[nmax]["edn-table"]) / nmax
++    per_toon = (series[nmax]["edn-table"] - series[nmax]["toon"]) / nmax
++    md.append(f"| {fam} | {tk} | {cmp['json_noprimer']} | {cmp['json_primer']} | {cmp['toon_primer']} | {cmp['toon_noprimer']} | {cmp['edn_short']} | {per_json:+.1f} tok | {per_toon:+.1f} tok |")
++    be_rows.append({"family": fam, "tokenizer": tk, "primer_tokens": P, **cmp, "per_record_saving_vs_json": round(per_json, 2), "per_record_extra_vs_toon": round(per_toon, 2)})
++    for n in ns:
++        s = series[n]
++        be_rows[-1][f"n{n}"] = f"{s['json-compact']}/{s['toon']}/{s['edn-table']}"
++with open(OUT / "breakeven.csv", "w", newline="") as f:
++    keys = list(dict.fromkeys(k for r in be_rows for k in r))
++    w = csv.DictWriter(f, fieldnames=keys)
++    w.writeheader()
++    w.writerows(be_rows)
++
++(OUT / "tokens.md").write_text("\n".join(md) + "\n")
++print("\n".join(md))
+diff --git a/tools/tokens.py b/tools/tokens.py
+new file mode 100644
+index 0000000..f6d6663
+--- /dev/null
++++ b/tools/tokens.py
+@@ -0,0 +1,55 @@
++"""Token counts per dataset × format × tokenizer (o200k via tiktoken, Qwen3 via HF tokenizers).
++
++Writes results/tokens/token_counts.csv, primers.csv, breakeven_counts.csv.
++Cross-checks tiktoken against the benchmark's gpt-tokenizer counts.
++"""
++import csv
++import json
++import sys
++from pathlib import Path
++
++sys.path.insert(0, str(Path(__file__).parent))
++from tok import count_o200k, count_qwen3  # noqa: E402
++
++ROOT = Path(__file__).resolve().parent.parent
++ENC = json.loads((ROOT / "build" / "encodings.json").read_text())
++OUT = ROOT / "results" / "tokens"
++OUT.mkdir(parents=True, exist_ok=True)
++TOKENIZERS = {"o200k": count_o200k, "qwen3": count_qwen3}
++
++mismatch = 0
++rows = []
++for group in ("tokens", "accuracy"):
++    for ds, fmts in ENC[group].items():
++        meta = ENC["meta"][f"{group}/{ds}"]
++        track = "flat" if meta["supportsCSV"] else "mixed"
++        for fmt, text in fmts.items():
++            r = {"group": group, "dataset": ds, "track": track, "format": fmt, "chars": len(text)}
++            for tk, fn in TOKENIZERS.items():
++                r[tk] = fn(text)
++            gt = ENC["gptTokenizer"][group][ds].get(fmt)
++            if gt is not None and gt != r["o200k"]:
++                mismatch += 1
++                print("MISMATCH", group, ds, fmt, gt, r["o200k"])
++            rows.append(r)
++
++with open(OUT / "token_counts.csv", "w", newline="") as f:
++    w = csv.DictWriter(f, fieldnames=list(rows[0]))
++    w.writeheader()
++    w.writerows(rows)
++
++with open(OUT / "primers.csv", "w", newline="") as f:
++    w = csv.writer(f)
++    w.writerow(["format", "o200k", "qwen3", "gpt_tokenizer", "text"])
++    for fmt, text in ENC["primers"].items():
++        w.writerow([fmt, count_o200k(text), count_qwen3(text), ENC["gptTokenizer"]["primers"][fmt], text])
++
++with open(OUT / "breakeven_counts.csv", "w", newline="") as f:
++    w = csv.writer(f)
++    w.writerow(["family", "n", "format", "o200k", "qwen3"])
++    for fam, sizes in ENC["breakeven"].items():
++        for n, fmts in sizes.items():
++            for fmt, text in fmts.items():
++                w.writerow([fam, n, fmt, count_o200k(text), count_qwen3(text)])
++
++print(f"rows={len(rows)} tiktoken-vs-gpt-tokenizer mismatches={mismatch}")
+diff --git a/vendor/toon/benchmarks/package.json b/vendor/toon/benchmarks/package.json
+index 09f23a7..6a75557 100644
+--- a/vendor/toon/benchmarks/package.json
++++ b/vendor/toon/benchmarks/package.json
+@@ -21,6 +21,7 @@
+     "@faker-js/faker": "^10.5.0",
+     "ai": "^7.0.37",
+     "csv-stringify": "^6.8.1",
++    "edn-data": "^1.2.2",
+     "fast-xml-parser": "^5.10.1",
+     "gpt-tokenizer": "^3.4.0",
+     "ofetch": "^1.5.1",
+diff --git a/vendor/toon/benchmarks/scripts/edn-dump-encodings.ts b/vendor/toon/benchmarks/scripts/edn-dump-encodings.ts
+new file mode 100644
+index 0000000..1267364
+--- /dev/null
++++ b/vendor/toon/benchmarks/scripts/edn-dump-encodings.ts
+@@ -0,0 +1,94 @@
++/**
++ * Dumps every encoding the EDN study uses, so Python tooling (tokenizers,
++ * edn_format round-trip test) sees byte-identical text to what models receive.
++ *
++ * Output: <repo>/build/encodings.json (large; regenerable) and
++ *         <repo>/results/encodings/accuracy/<dataset>.<format>.txt (the exact data blocks sent to models).
++ */
++import * as fs from 'node:fs'
++import * as path from 'node:path'
++import { encode as gptEncode } from 'gpt-tokenizer'
++import { BENCHMARKS_DIR } from '../src/constants.ts'
++import { ACCURACY_DATASETS, TOKEN_EFFICIENCY_DATASETS } from '../src/datasets.ts'
++import { encodeEdn } from '../src/edn.ts'
++import { FORMATS, supportsCSV } from '../src/formats.ts'
++import { encodeDataset } from '../src/structural-corruption.ts'
++
++const REPO_ROOT = path.join(BENCHMARKS_DIR, '..', '..', '..')
++
++// Data blocks: edn-table-primer shares edn-table's block, so it is not dumped separately.
++const TOKEN_FORMATS = ['json-pretty', 'json-compact', 'yaml', 'xml', 'toon', 'csv', 'edn-maps', 'edn-table']
++const ACCURACY_FORMATS = ['json-compact', 'toon', 'csv', 'edn-maps', 'edn-table']
++const BREAKEVEN_SIZES = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000]
++
++const layouts = {
++  'edn-table-oneline': (data: unknown) => encodeEdn(data, { tables: true, rowSeparator: ' ' }),
++  'edn-maps-lines': (data: unknown) => encodeEdn(data, { tables: false, topLevelArraySeparator: '\n' }),
++}
++
++const out: Record<string, any> = {
++  primers: Object.fromEntries(Object.values(FORMATS).map(f => [f.name, f.primer])),
++  accuracy: {},
++  tokens: {},
++  breakeven: {},
++  sources: { accuracy: {}, tokens: {} },
++  meta: {},
++  gptTokenizer: { accuracy: {}, tokens: {}, primers: {} },
++}
++
++for (const [name, primer] of Object.entries(out.primers))
++  out.gptTokenizer.primers[name] = gptEncode(primer as string).length
++
++const accDir = path.join(REPO_ROOT, 'results', 'encodings', 'accuracy')
++fs.mkdirSync(accDir, { recursive: true })
++
++for (const dataset of ACCURACY_DATASETS) {
++  const entry: Record<string, string> = {}
++  for (const fmt of ACCURACY_FORMATS) {
++    if (fmt === 'csv' && !supportsCSV(dataset))
++      continue
++    entry[fmt] = encodeDataset(FORMATS[fmt]!, dataset)
++    fs.writeFileSync(path.join(accDir, `${dataset.name}.${fmt}.txt`), entry[fmt]!)
++  }
++  out.accuracy[dataset.name] = entry
++  out.sources.accuracy[dataset.name] = dataset.data
++  out.meta[`accuracy/${dataset.name}`] = { ...dataset.metadata, corruption: dataset.corruption?.kind ?? null }
++  out.gptTokenizer.accuracy[dataset.name] = Object.fromEntries(Object.entries(entry).map(([f, t]) => [f, gptEncode(t).length]))
++}
++
++for (const dataset of TOKEN_EFFICIENCY_DATASETS) {
++  const entry: Record<string, string> = {}
++  for (const fmt of TOKEN_FORMATS) {
++    if (fmt === 'csv' && !supportsCSV(dataset))
++      continue
++    entry[fmt] = FORMATS[fmt]!.encode(dataset.data)
++  }
++  for (const [name, fn] of Object.entries(layouts))
++    entry[name] = fn(dataset.data)
++  out.tokens[dataset.name] = entry
++  out.sources.tokens[dataset.name] = dataset.data
++  out.meta[`tokens/${dataset.name}`] = { ...dataset.metadata, description: dataset.description }
++  out.gptTokenizer.tokens[dataset.name] = Object.fromEntries(Object.entries(entry).map(([f, t]) => [f, gptEncode(t).length]))
++}
++
++// Break-even series: prefixes of the token-benchmark datasets.
++const families: Record<string, { key: string, dataset: string }> = {
++  employees: { key: 'employees', dataset: 'tabular' },
++  analytics: { key: 'metrics', dataset: 'analytics' },
++  github: { key: 'repositories', dataset: 'github' },
++  orders: { key: 'orders', dataset: 'nested' },
++  'event-logs': { key: 'logs', dataset: 'event-logs' },
++}
++for (const [family, { key, dataset }] of Object.entries(families)) {
++  const source = TOKEN_EFFICIENCY_DATASETS.find(d => d.name === dataset)!
++  const rows = source.data[key] as unknown[]
++  out.breakeven[family] = {}
++  for (const n of BREAKEVEN_SIZES.filter(n => n <= rows.length)) {
++    const data = { [key]: rows.slice(0, n) }
++    out.breakeven[family][n] = Object.fromEntries(['json-compact', 'toon', 'edn-maps', 'edn-table'].map(f => [f, FORMATS[f]!.encode(data)]))
++  }
++}
++
++fs.mkdirSync(path.join(REPO_ROOT, 'build'), { recursive: true })
++fs.writeFileSync(path.join(REPO_ROOT, 'build', 'encodings.json'), JSON.stringify(out))
++console.log('wrote build/encodings.json and results/encodings/accuracy/*')
+diff --git a/vendor/toon/benchmarks/scripts/edn-encode-stdin.ts b/vendor/toon/benchmarks/scripts/edn-encode-stdin.ts
+new file mode 100644
+index 0000000..9739a2f
+--- /dev/null
++++ b/vendor/toon/benchmarks/scripts/edn-encode-stdin.ts
+@@ -0,0 +1,10 @@
++/** Reads `[{data}, ...]` JSON on stdin and prints the edn-maps / edn-table / toon encodings of each `data`. */
++import * as fs from 'node:fs'
++import { FORMATS } from '../src/formats.ts'
++
++const records = JSON.parse(fs.readFileSync(0, 'utf8')) as { data: unknown }[]
++console.log(JSON.stringify(records.map(r => ({
++  'edn-maps': FORMATS['edn-maps']!.encode(r.data),
++  'edn-table': FORMATS['edn-table']!.encode(r.data),
++  'toon': FORMATS.toon!.encode(r.data),
++}))))
+diff --git a/vendor/toon/benchmarks/scripts/edn-gen.ts b/vendor/toon/benchmarks/scripts/edn-gen.ts
+new file mode 100644
+index 0000000..01c9816
+--- /dev/null
++++ b/vendor/toon/benchmarks/scripts/edn-gen.ts
+@@ -0,0 +1,165 @@
++/**
++ * Generation check (PLAN.md §5).
++ *
++ *   node scripts/edn-gen.ts tasks   → <repo>/results/generation/tasks.jsonl
++ *   node scripts/edn-gen.ts grade   → <repo>/results/generation/graded.csv
++ *
++ * Each model converts 20 JSON records into edn-table, edn-maps and TOON
++ * (3 samples each). Grading: parse-valid (edn-data / strict TOON decode),
++ * lossless (decoded value deep-equals the source, key order ignored) and, for
++ * the table/tabular forms, canonical form (tables exactly where eligible).
++ */
++import * as fs from 'node:fs'
++import * as path from 'node:path'
++import process from 'node:process'
++import { parseEDNString } from 'edn-data'
++import { decode as decodeToon } from '../../packages/toon/src/index.ts'
++import { BENCHMARKS_DIR } from '../src/constants.ts'
++import { decodeEdn } from '../src/edn-decode.ts'
++import { FORMATS } from '../src/formats.ts'
++
++const REPO_ROOT = path.join(BENCHMARKS_DIR, '..', '..', '..')
++const GEN_DIR = path.join(REPO_ROOT, 'generation')
++const OUT_DIR = path.join(REPO_ROOT, 'results', 'generation')
++const RAW_DIR = path.join(REPO_ROOT, 'results', 'raw', 'generation')
++const SAMPLES = 3
++
++const TARGETS: Record<string, { name: string, formatId: string }> = {
++  'edn-table': { name: 'EDN (table form)', formatId: 'edn-table-primer' }, // LONG primer
++  'edn-maps': { name: 'EDN', formatId: 'edn-maps' }, // SHORT primer
++  'toon': { name: 'TOON', formatId: 'toon' }, // upstream primer
++}
++
++const records = JSON.parse(fs.readFileSync(path.join(GEN_DIR, 'records.json'), 'utf8')) as { id: string, shape: string, data: any }[]
++const example = JSON.parse(fs.readFileSync(path.join(GEN_DIR, 'example.json'), 'utf8'))
++
++function buildPrompt(target: string, record: unknown): string {
++  const { name, formatId } = TARGETS[target]!
++  const format = FORMATS[formatId]!
++  const fence = format.fence
++  return `Convert the JSON data below to ${name}.
++
++${format.primer}
++
++Example. This JSON:
++\`\`\`json
++${JSON.stringify(example)}
++\`\`\`
++is written in ${name} as:
++\`\`\`${fence}
++${format.encode(example)}
++\`\`\`
++
++Now convert this JSON:
++\`\`\`json
++${JSON.stringify(record)}
++\`\`\`
++
++Output only the converted data in a single \`\`\`${fence} code block, with nothing before or after it.`
++}
++
++/** Last fenced block, or the whole reply if there is none. */
++export function extractBlock(text: string): string {
++  const blocks = [...text.matchAll(/```[^\n]*\n([\s\S]*?)```/g)]
++  return blocks.length ? blocks.at(-1)![1]!.replace(/\n$/, '') : text.trim()
++}
++
++function canonicalJson(value: unknown): string {
++  if (Array.isArray(value))
++    return `[${value.map(canonicalJson).join(',')}]`
++  if (value && typeof value === 'object') {
++    return `{${Object.keys(value).sort().map(k => `${JSON.stringify(k)}:${canonicalJson((value as any)[k])}`).join(',')}}`
++  }
++  return JSON.stringify(value)
++}
++
++/** Canonical string of a raw edn-data parse tree (keywords kept distinct, map key order ignored). */
++function canonicalRaw(value: any): string {
++  if (Array.isArray(value))
++    return `[${value.map(canonicalRaw).join(' ')}]`
++  if (value && typeof value === 'object' && Array.isArray(value.map))
++    return `{${value.map.map(([k, v]: [any, any]) => `${canonicalRaw(k)} ${canonicalRaw(v)}`).sort().join(' ')}}`
++  if (value && typeof value === 'object' && typeof value.key === 'string' && Object.keys(value).length === 1)
++    return `:${value.key}`
++  if (value && typeof value === 'object')
++    return `#other${JSON.stringify(value)}`
++  return JSON.stringify(typeof value === 'bigint' ? Number(value) : value)
++}
++
++const RAW_OPTS = { mapAs: 'doubleArray', keywordAs: 'object', listAs: 'object', setAs: 'object' } as any
++
++function countToonTabularHeaders(text: string): number {
++  return (text.match(/\[\d+\]\{[^}]*\}:/g) ?? []).length
++}
++
++function grade(target: string, reply: string, source: unknown) {
++  const block = extractBlock(reply)
++  let parseValid = false
++  let lossless = false
++  let canonical = false
++  let error = ''
++  try {
++    if (target === 'toon') {
++      const decoded = decodeToon(block)
++      parseValid = true
++      lossless = canonicalJson(decoded) === canonicalJson(source)
++      canonical = lossless && countToonTabularHeaders(block) === countToonTabularHeaders(FORMATS.toon!.encode(source))
++    }
++    else {
++      parseEDNString(block)
++      parseValid = true
++      const expand = target === 'edn-table'
++      const decoded = decodeEdn(block, { expandTables: expand })
++      lossless = canonicalJson(decoded) === canonicalJson(source)
++      const reference = FORMATS[target]!.encode(source)
++      canonical = lossless && canonicalRaw(parseEDNString(block, RAW_OPTS)) === canonicalRaw(parseEDNString(reference, RAW_OPTS))
++    }
++  }
++  catch (e) {
++    error = String((e as Error).message).slice(0, 200)
++  }
++  return { parseValid, lossless, canonical, error, block }
++}
++
++const mode = process.argv[2]
++
++if (mode === 'tasks') {
++  fs.mkdirSync(OUT_DIR, { recursive: true })
++  const lines: string[] = []
++  for (const record of records) {
++    for (const target of Object.keys(TARGETS)) {
++      for (let s = 1; s <= SAMPLES; s++) {
++        lines.push(JSON.stringify({ task_id: `${record.id}-${target}-s${s}`, record: record.id, shape: record.shape, format: target, sample: s, prompt: buildPrompt(target, record.data) }))
++      }
++    }
++  }
++  fs.writeFileSync(path.join(OUT_DIR, 'tasks.jsonl'), `${lines.join('\n')}\n`)
++  console.log(`wrote ${lines.length} generation tasks`)
++}
++else if (mode === 'grade') {
++  const byId = new Map(records.map(r => [r.id, r]))
++  const header = ['model', 'task_id', 'record', 'shape', 'format', 'sample', 'ok', 'parse_valid', 'lossless', 'canonical', 'error']
++  const rows = [header.join(',')]
++  const blocks: Record<string, string> = {}
++  for (const file of fs.readdirSync(RAW_DIR).filter(f => f.endsWith('.jsonl')).sort()) {
++    const latest = new Map<string, any>()
++    for (const line of fs.readFileSync(path.join(RAW_DIR, file), 'utf8').split('\n').filter(Boolean)) {
++      const rec = JSON.parse(line)
++      if (rec.ok || !latest.has(rec.task_id))
++        latest.set(rec.task_id, rec)
++    }
++    for (const rec of latest.values()) {
++      const source = byId.get(rec.record)!.data
++      const g = rec.ok ? grade(rec.format, rec.text, source) : { parseValid: false, lossless: false, canonical: false, error: 'call failed', block: '' }
++      blocks[`${rec.model}/${rec.task_id}`] = g.block
++      rows.push([rec.model, rec.task_id, rec.record, rec.shape, rec.format, rec.sample, rec.ok ? 1 : 0, g.parseValid ? 1 : 0, g.lossless ? 1 : 0, g.canonical ? 1 : 0, JSON.stringify(g.error)].join(','))
++    }
++  }
++  fs.writeFileSync(path.join(OUT_DIR, 'graded.csv'), `${rows.join('\n')}\n`)
++  fs.writeFileSync(path.join(OUT_DIR, 'extracted_blocks.json'), JSON.stringify(blocks, null, 1))
++  console.log(`graded ${rows.length - 1} generation attempts`)
++}
++else {
++  console.error('usage: edn-gen.ts tasks|grade')
++  process.exit(1)
++}
+diff --git a/vendor/toon/benchmarks/scripts/edn-grade.ts b/vendor/toon/benchmarks/scripts/edn-grade.ts
+new file mode 100644
+index 0000000..4ccf180
+--- /dev/null
++++ b/vendor/toon/benchmarks/scripts/edn-grade.ts
+@@ -0,0 +1,135 @@
++/**
++ * Grades the EDN study's raw accuracy results (PLAN.md §4).
++ *
++ * - Parses "Q<n>: <answer>" lines from each batched reply.
++ * - Primary grade: upstream `compareAnswers`, unchanged.
++ * - Secondary grade: pre-registered format-agnostic lenient normaliser, then
++ *   `compareAnswers` (used only for failure classification / sensitivity).
++ *
++ * Output: <repo>/results/accuracy/graded.csv (one row per model × seed × format × question)
++ */
++import type { AnswerType } from '../src/normalize.ts'
++import type { Question } from '../src/types.ts'
++import * as fs from 'node:fs'
++import * as path from 'node:path'
++import { BENCHMARKS_DIR } from '../src/constants.ts'
++import { ACCURACY_DATASETS } from '../src/datasets.ts'
++import { compareAnswers } from '../src/normalize.ts'
++import { generateQuestions } from '../src/questions/index.ts'
++
++const REPO_ROOT = path.join(BENCHMARKS_DIR, '..', '..', '..')
++const RAW_DIR = path.join(REPO_ROOT, 'results', 'raw', 'accuracy')
++
++export const SHAPES: Record<string, string> = {
++  'tabular': 'uniform-tables',
++  'analytics': 'uniform-tables',
++  'github': 'uniform-tables',
++  'nested-config': 'nested-config',
++  'nested': 'mixed',
++  'event-logs': 'mixed',
++  'keyed': 'mixed',
++  'nested-group': 'mixed',
++}
++
++const ANSWER_LINE = /^\s*\**Q?(\d+)\**\s*[:.)]\s*(.*)$/
++
++/**
++ * Maps question number → answer text. The LAST occurrence wins (deviation D2
++ * from PLAN.md's "first match wins": replies that restate questions as
++ * "Q1: <question>" headers before a final answer block would otherwise be
++ * graded on the header).
++ */
++export function parseAnswers(text: string): Map<number, string> {
++  const answers = new Map<number, string>()
++  for (const line of text.split('\n')) {
++    const m = line.match(ANSWER_LINE)
++    if (!m)
++      continue
++    const n = Number(m[1])
++    answers.set(n, m[2]!.replace(/^\*+\s*|\s*\*+$/g, '').trim())
++  }
++  return answers
++}
++
++/** Pre-registered lenient normaliser (identical for all formats). */
++export function lenient(answer: string, type: AnswerType): string {
++  let s = answer.trim().replace(/^`+|`+$/g, '').trim()
++  if (/^\[[\s\S]*\]$/.test(s) || /^\([\s\S]*\)$/.test(s))
++    s = s.slice(1, -1).trim()
++  const stripItem = (item: string) => item.trim().replace(/^:/, '').replace(/^["']|["']$/g, '').trim()
++  if (type === 'csv-list-ordered' || type === 'csv-list-unordered') {
++    if (!s.includes(',') && /\s/.test(s))
++      s = s.split(/\s+/).join(',')
++    return s.split(',').map(stripItem).join(',')
++  }
++  return stripItem(s)
++}
++
++function csvCell(value: unknown): string {
++  const s = String(value ?? '')
++  return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
++}
++
++const questions = new Map<string, Question>(generateQuestions().map(q => [q.id, q]))
++const datasetTrack = new Map(ACCURACY_DATASETS.map(d => [d.name, d.metadata.supportsCSV ? 'flat' : 'mixed']))
++
++const header = ['model', 'served_model', 'seed', 'batch_id', 'format', 'dataset', 'track', 'shape', 'question_id', 'type', 'answer_type', 'position', 'batch_size', 'expected', 'answer', 'parsed', 'correct', 'correct_lenient', 'error_class', 'verbose', 'extra_lines', 'output_tokens', 'thinking_tokens', 'input_total', 'fake_tool_call']
++const rows: string[] = [header.join(',')]
++const stats: Record<string, number> = {}
++
++for (const file of fs.readdirSync(RAW_DIR).filter(f => f.endsWith('.jsonl')).sort()) {
++  const latest = new Map<string, any>()
++  for (const line of fs.readFileSync(path.join(RAW_DIR, file), 'utf8').split('\n').filter(Boolean)) {
++    const rec = JSON.parse(line)
++    // keep the last ok record per task (a failed attempt is superseded by a later success)
++    if (rec.ok || !latest.has(rec.task_id))
++      latest.set(rec.task_id, rec)
++  }
++
++  for (const rec of latest.values()) {
++    const answers = rec.ok ? parseAnswers(rec.text) : new Map<number, string>()
++    // Non-empty reply lines that are not answer lines: a proxy for visible reasoning/preamble.
++    const extraLines = rec.ok ? rec.text.split('\n').filter((l: string) => l.trim() && !ANSWER_LINE.test(l)).length : 0
++    rec.question_ids.forEach((qid: string, i: number) => {
++      const q = questions.get(qid)!
++      const type = (q.answerType ?? 'string') as AnswerType
++      const parsed = answers.has(i + 1)
++      const answer = answers.get(i + 1) ?? ''
++      const correct = parsed && compareAnswers(answer, q.groundTruth, type, q.normalizationOptions).match
++      const correctLenient = parsed && (correct || compareAnswers(lenient(answer, type), q.groundTruth, type, q.normalizationOptions).match)
++      const errorClass = correct ? '' : !rec.ok ? 'call-failed' : !parsed ? 'format-missing' : correctLenient ? 'format-lenient' : 'comprehension'
++      const verbose = parsed && answer.length > 60 && q.groundTruth.length < 30
++      stats[errorClass || 'correct'] = (stats[errorClass || 'correct'] ?? 0) + 1
++      rows.push([
++        rec.model,
++        (rec.served_models ?? []).join('|'),
++        rec.seed,
++        rec.batch_id,
++        rec.format,
++        rec.dataset,
++        datasetTrack.get(rec.dataset),
++        SHAPES[rec.dataset] ?? 'structural-validation',
++        qid,
++        q.type,
++        type,
++        i + 1,
++        rec.question_ids.length,
++        q.groundTruth,
++        answer,
++        parsed ? 1 : 0,
++        correct ? 1 : 0,
++        correctLenient ? 1 : 0,
++        errorClass,
++        verbose ? 1 : 0,
++        extraLines,
++        rec.output_tokens ?? '',
++        rec.thinking_tokens ?? '',
++        rec.input_total ?? '',
++        rec.ok && /<function_calls>|<invoke name=/.test(rec.text) ? 1 : 0,
++      ].map(csvCell).join(','))
++    })
++  }
++}
++
++fs.writeFileSync(path.join(REPO_ROOT, 'results', 'accuracy', 'graded.csv'), `${rows.join('\n')}\n`)
++console.log(`graded ${rows.length - 1} answers`, stats)
+diff --git a/vendor/toon/benchmarks/scripts/edn-make-tasks.ts b/vendor/toon/benchmarks/scripts/edn-make-tasks.ts
+new file mode 100644
+index 0000000..db8335a
+--- /dev/null
++++ b/vendor/toon/benchmarks/scripts/edn-make-tasks.ts
+@@ -0,0 +1,100 @@
++/**
++ * Builds the accuracy task manifest for the EDN study (PLAN.md §4):
++ * 3 seeds; per seed the 244 questions are shuffled with a seeded PRNG, grouped
++ * by dataset in shuffled order and split into ⌈n/10⌉ near-equal batches. Every
++ * format gets the same batches (paired design). CSV only on flat datasets.
++ *
++ * Output: <repo>/results/accuracy/tasks.jsonl and questions.json
++ */
++import * as fs from 'node:fs'
++import * as path from 'node:path'
++import { BENCHMARKS_DIR } from '../src/constants.ts'
++import { ACCURACY_DATASETS } from '../src/datasets.ts'
++import { buildBatchPrompt } from '../src/evaluate.ts'
++import { FORMATS, supportsCSV } from '../src/formats.ts'
++import { generateQuestions } from '../src/questions/index.ts'
++import { encodeDataset } from '../src/structural-corruption.ts'
++
++const REPO_ROOT = path.join(BENCHMARKS_DIR, '..', '..', '..')
++const OUT_DIR = path.join(REPO_ROOT, 'results', 'accuracy')
++const SEEDS = [1, 2, 3]
++const BATCH_MAX = 10
++const STUDY_FORMATS = ['json-compact', 'toon', 'edn-maps', 'edn-table', 'edn-table-primer', 'csv']
++
++export function mulberry32(seed: number): () => number {
++  let a = seed >>> 0
++  return () => {
++    a = (a + 0x6D2B79F5) >>> 0
++    let t = a
++    t = Math.imul(t ^ (t >>> 15), t | 1)
++    t ^= t + Math.imul(t ^ (t >>> 7), t | 61)
++    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
++  }
++}
++
++function shuffle<T>(items: T[], rand: () => number): T[] {
++  const a = [...items]
++  for (let i = a.length - 1; i > 0; i--) {
++    const j = Math.floor(rand() * (i + 1))
++    ;[a[i], a[j]] = [a[j]!, a[i]!]
++  }
++  return a
++}
++
++const questions = generateQuestions()
++if (questions.length !== 244)
++  throw new Error(`expected 244 questions, got ${questions.length}`)
++
++fs.mkdirSync(OUT_DIR, { recursive: true })
++fs.writeFileSync(path.join(OUT_DIR, 'questions.json'), JSON.stringify(questions.map((q) => {
++  const ds = ACCURACY_DATASETS.find(d => d.name === q.dataset)!
++  return { ...q, track: ds.metadata.supportsCSV ? 'flat' : 'mixed' }
++}), null, 1))
++
++const lines: string[] = []
++let batchCounter = 0
++for (const seed of SEEDS) {
++  const shuffled = shuffle(questions, mulberry32(seed * 7919))
++  const datasetOrder: string[] = []
++  const byDataset = new Map<string, typeof questions>()
++  for (const q of shuffled) {
++    if (!byDataset.has(q.dataset)) {
++      byDataset.set(q.dataset, [])
++      datasetOrder.push(q.dataset)
++    }
++    byDataset.get(q.dataset)!.push(q)
++  }
++
++  for (const dsName of datasetOrder) {
++    const qs = byDataset.get(dsName)!
++    const k = Math.ceil(qs.length / BATCH_MAX)
++    const base = Math.floor(qs.length / k)
++    const extra = qs.length % k
++    let start = 0
++    for (let b = 0; b < k; b++) {
++      const size = base + (b < extra ? 1 : 0)
++      const batch = qs.slice(start, start + size)
++      start += size
++      const batchId = `s${seed}-b${String(batchCounter++).padStart(3, '0')}`
++      const dataset = ACCURACY_DATASETS.find(d => d.name === dsName)!
++      for (const fmt of STUDY_FORMATS) {
++        if (fmt === 'csv' && !supportsCSV(dataset))
++          continue
++        const format = FORMATS[fmt]!
++        const data = encodeDataset(format, dataset)
++        lines.push(JSON.stringify({
++          task_id: `${batchId}-${fmt}`,
++          seed,
++          batch_id: batchId,
++          dataset: dsName,
++          format: fmt,
++          question_ids: batch.map(q => q.id),
++          prompt: buildBatchPrompt(format, data, batch),
++        }))
++      }
++    }
++  }
++}
++
++fs.writeFileSync(path.join(OUT_DIR, 'tasks.jsonl'), `${lines.join('\n')}\n`)
++console.log(`wrote ${lines.length} tasks`)
+diff --git a/vendor/toon/benchmarks/src/edn-decode.ts b/vendor/toon/benchmarks/src/edn-decode.ts
+new file mode 100644
+index 0000000..88fceb0
+--- /dev/null
++++ b/vendor/toon/benchmarks/src/edn-decode.ts
+@@ -0,0 +1,76 @@
++import { parseEDNString } from 'edn-data'
++
++/**
++ * Decodes EDN produced by `edn.ts` (or by a model) back to plain JSON data using
++ * the `edn-data` parser.
++ *
++ * @remarks
++ * Strict on types so a round trip cannot pass by accident: map keys must be
++ * keywords or strings, keywords are only accepted as map keys (and inside a
++ * table's `:cols`), lists/sets/tags are rejected. With `expandTables`, a map
++ * whose keys are exactly `:cols` and `:rows` is expanded into an array of
++ * records (a row whose width differs from `:cols` is an error).
++ */
++export function decodeEdn(text: string, { expandTables }: { expandTables: boolean }): unknown {
++  const raw = parseEDNString(text, { mapAs: 'doubleArray', keywordAs: 'object', listAs: 'object', setAs: 'object' } as any)
++  return convert(raw, expandTables)
++}
++
++function isKeyword(value: unknown): value is { key: string } {
++  return typeof value === 'object' && value !== null && !Array.isArray(value) && Object.keys(value).length === 1 && typeof (value as any).key === 'string'
++}
++
++function isMap(value: unknown): value is { map: [unknown, unknown][] } {
++  return typeof value === 'object' && value !== null && !Array.isArray(value) && Array.isArray((value as any).map) && Object.keys(value).length === 1
++}
++
++function keyName(key: unknown): string {
++  if (isKeyword(key))
++    return key.key
++  if (typeof key === 'string')
++    return key
++  throw new Error(`EDN decode: unsupported map key ${JSON.stringify(key)}`)
++}
++
++function convert(value: unknown, expandTables: boolean): unknown {
++  if (value === null || typeof value === 'string' || typeof value === 'boolean')
++    return value
++  if (typeof value === 'number')
++    return value
++  if (typeof value === 'bigint')
++    return Number(value)
++  if (Array.isArray(value))
++    return value.map(v => convert(v, expandTables))
++  if (isKeyword(value))
++    throw new Error(`EDN decode: keyword :${value.key} used as a value`)
++  if (isMap(value)) {
++    const entries = value.map
++    const names = entries.map(([k]) => keyName(k))
++    if (new Set(names).size !== names.length)
++      throw new Error('EDN decode: duplicate map key')
++
++    if (expandTables && names.length === 2 && names[0] === 'cols' && names[1] === 'rows' && entries.every(([k]) => isKeyword(k))) {
++      const colsRaw = entries[0]![1]
++      const rowsRaw = entries[1]![1]
++      if (!Array.isArray(colsRaw) || !Array.isArray(rowsRaw))
++        throw new Error('EDN decode: malformed table')
++      const cols = colsRaw.map(keyName)
++      return rowsRaw.map((row) => {
++        if (!Array.isArray(row) || row.length !== cols.length)
++          throw new Error('EDN decode: table row width differs from :cols')
++        const record: Record<string, unknown> = {}
++        cols.forEach((c, i) => {
++          record[c] = convert(row[i], expandTables)
++        })
++        return record
++      })
++    }
++
++    const out: Record<string, unknown> = {}
++    entries.forEach(([, v], i) => {
++      out[names[i]!] = convert(v, expandTables)
++    })
++    return out
++  }
++  throw new Error(`EDN decode: unsupported value ${JSON.stringify(value)}`)
++}
+diff --git a/vendor/toon/benchmarks/src/edn.ts b/vendor/toon/benchmarks/src/edn.ts
+new file mode 100644
+index 0000000..fe38745
+--- /dev/null
++++ b/vendor/toon/benchmarks/src/edn.ts
+@@ -0,0 +1,160 @@
++/**
++ * EDN encoders for the format benchmark.
++ *
++ * @remarks
++ * Two encodings share one serializer:
++ *   - `edn-maps`: direct conversion – keyword keys, vectors for arrays, one
++ *     space between elements, single line.
++ *   - `edn-table`: as `edn-maps`, but every tabular-eligible array (same rule as
++ *     TOON's primitive tabular form) becomes `{:cols [...] :rows [...]}`, with
++ *     each row after the first on its own line.
++ *
++ * Both are lossless: see `test/edn.test.ts` (edn-data) and
++ * `tools/test_edn_roundtrip.py` (edn_format).
++ */
++
++export interface EdnOptions {
++  /** Encode tabular-eligible arrays as `{:cols [...] :rows [...]}`. */
++  tables: boolean
++  /** Separator placed before every table row except the first. */
++  rowSeparator?: string
++  /** Separator between the elements of the top-level map's array values (layout confound check only). */
++  topLevelArraySeparator?: string
++}
++
++type Primitive = string | number | boolean | null
++
++// EDN symbol rules restricted to ASCII: may not start with a digit, and a
++// leading -, + or . may not be followed by a digit. `:`, `#` and `/` are legal
++// constituents in some positions but are excluded to keep decoding trivial.
++const KEYWORD_SAFE = /^(?:[A-Z*!_?$%&=<>]|[-+.](?!\d))[\w.*+!?$%&=<>-]*$/i
++
++export function isKeywordSafe(key: string): boolean {
++  return KEYWORD_SAFE.test(key)
++}
++
++function isPrimitive(value: unknown): value is Primitive {
++  return value === null || typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean'
++}
++
++function isPlainObject(value: unknown): value is Record<string, unknown> {
++  return typeof value === 'object' && value !== null && !Array.isArray(value)
++}
++
++/**
++ * Tabular eligibility: length ≥ 1, every element a plain object with the
++ * identical key sequence (≥ 1 key), every value primitive.
++ */
++export function isTabular(value: unknown[]): value is Record<string, Primitive>[] {
++  if (value.length === 0)
++    return false
++
++  const first = value[0]
++  if (!isPlainObject(first))
++    return false
++
++  const keys = Object.keys(first)
++  if (keys.length === 0)
++    return false
++
++  return value.every((element) => {
++    if (!isPlainObject(element))
++      return false
++    const elementKeys = Object.keys(element)
++    if (elementKeys.length !== keys.length || elementKeys.some((k, i) => k !== keys[i]))
++      return false
++    return elementKeys.every(k => isPrimitive(element[k]))
++  })
++}
++
++export function encodeString(value: string): string {
++  let out = '"'
++  for (const char of value) {
++    const code = char.codePointAt(0)!
++    if (char === '"')
++      out += '\\"'
++    else if (char === '\\')
++      out += '\\\\'
++    else if (char === '\n')
++      out += '\\n'
++    else if (char === '\r')
++      out += '\\r'
++    else if (char === '\t')
++      out += '\\t'
++    else if (code < 0x20 || code === 0x7F)
++      out += `\\u${code.toString(16).padStart(4, '0')}`
++    else
++      out += char
++  }
++  return `${out}"`
++}
++
++function encodeNumber(value: number): string {
++  if (!Number.isFinite(value))
++    throw new Error(`EDN encoder: non-finite number ${value}`)
++  // `String` gives the same digits as JSON (e.g. 1e+21, 0.1, -3).
++  return String(value)
++}
++
++function encodeKey(key: string): string {
++  return isKeywordSafe(key) ? `:${key}` : encodeString(key)
++}
++
++export function encodePrimitive(value: Primitive): string {
++  if (value === null)
++    return 'nil'
++  if (typeof value === 'string')
++    return encodeString(value)
++  if (typeof value === 'number')
++    return encodeNumber(value)
++  return value ? 'true' : 'false'
++}
++
++/** Serializes a table node from explicit columns and rows (rows may be ragged – used by structural corruption). */
++export function encodeTable(cols: string[], rows: Primitive[][], rowSeparator = '\n'): string {
++  const colText = `[${cols.map(encodeKey).join(' ')}]`
++  const rowText = rows.map(row => `[${row.map(encodePrimitive).join(' ')}]`).join(rowSeparator)
++  return `{:cols ${colText} :rows [${rowText}]}`
++}
++
++function encodeValue(value: unknown, options: EdnOptions, depth: number): string {
++  if (isPrimitive(value))
++    return encodePrimitive(value)
++
++  if (Array.isArray(value)) {
++    if (options.tables && isTabular(value)) {
++      const cols = Object.keys(value[0]!)
++      const rows = value.map(row => cols.map(c => row[c]!))
++      return encodeTable(cols, rows, options.rowSeparator ?? '\n')
++    }
++    const separator = depth === 1 && options.topLevelArraySeparator ? options.topLevelArraySeparator : ' '
++    return `[${value.map(v => encodeValue(v, options, depth + 1)).join(separator)}]`
++  }
++
++  if (isPlainObject(value)) {
++    const keys = Object.keys(value)
++    if (keys.length === 2 && keys.includes('cols') && keys.includes('rows'))
++      throw new Error('EDN encoder: source map with exactly the keys cols/rows would be ambiguous with the table form')
++    const entries = keys.map(k => `${encodeKey(k)} ${encodeValue(value[k], options, depth + 1)}`)
++    return `{${entries.join(' ')}}`
++  }
++
++  throw new Error(`EDN encoder: unsupported value ${String(value)}`)
++}
++
++export function encodeEdn(data: unknown, options: EdnOptions): string {
++  return encodeValue(data, options, 0)
++}
++
++export const encodeEdnMaps = (data: unknown): string => encodeEdn(data, { tables: false })
++export const encodeEdnTable = (data: unknown): string => encodeEdn(data, { tables: true })
++
++/** Short primer shared by `edn-maps` and `edn-table` (the no-primer condition). */
++export const EDN_SHORT_PRIMER = 'EDN: Clojure data notation. Maps {:key value}, vectors [a b c], keyword keys (:name), nil for null.'
++
++/** Long primer for `edn-table-primer` (the H3 treatment), frozen in PLAN.md. */
++export const EDN_LONG_PRIMER = `EDN (Clojure data notation) primer:
++- Map: {key value key value ...}. Keys are keywords like :name (field name = keyword without the colon) or, if not keyword-safe, strings.
++- Vector: [a b c], elements separated by whitespace; commas are not used.
++- Values: "strings", numbers, true, false, nil (null).
++- Table: {:cols [:c1 :c2 ...] :rows [[v1 v2 ...] ...]} is an array of records. Each row vector is one record whose Nth value belongs to the Nth column in :cols. Each row starts on a new line; record count = number of rows.`
+diff --git a/vendor/toon/benchmarks/src/evaluate.ts b/vendor/toon/benchmarks/src/evaluate.ts
+index 0c45e12..6a91a6a 100644
+--- a/vendor/toon/benchmarks/src/evaluate.ts
++++ b/vendor/toon/benchmarks/src/evaluate.ts
+@@ -46,7 +46,7 @@ export async function evaluateQuestion(
+   const prompt = `
+ ${format.primer}
+ 
+-Given the following data in ${format.name} format:
++Given the following data in ${format.promptName ?? format.name} format:
+ 
+ \`\`\`${format.fence}
+ ${formattedData}
+@@ -93,3 +93,36 @@ Answer:
+     latencyMs,
+   }
+ }
++
++/**
++ * Batched variant of the upstream prompt used by the EDN study: identical
++ * template, with the single `Question:` line replaced by a numbered list and one
++ * extra answer-format line. The same text is used for every format.
++ */
++export function buildBatchPrompt(format: Format, formattedData: string, questions: Question[]): string {
++  const questionLines = questions.map((q, i) => `Q${i + 1}: ${q.prompt}`).join('\n')
++
++  return `
++${format.primer}
++
++Given the following data in ${format.promptName ?? format.name} format:
++
++\`\`\`${format.fence}
++${formattedData}
++\`\`\`
++
++Questions:
++${questionLines}
++
++Answer format requirements:
++- Answer each question on its own line as "Q<number>: <answer>", in order, with no other text
++- Do not show your work, reasoning or code
++- Provide only the value itself, no explanation
++- For numbers: output digits only (no commas, currency symbols, or units)
++- For dates/field names: use the exact string from the data
++- For lists: output comma-separated values with no spaces
++
++Answers:
++`.trim()
++}
++
+diff --git a/vendor/toon/benchmarks/src/formats.ts b/vendor/toon/benchmarks/src/formats.ts
+index 2799d79..2dc26de 100644
+--- a/vendor/toon/benchmarks/src/formats.ts
++++ b/vendor/toon/benchmarks/src/formats.ts
+@@ -3,6 +3,7 @@ import { stringify as stringifyCSV } from 'csv-stringify/sync'
+ import { XMLBuilder } from 'fast-xml-parser'
+ import { stringify as stringifyYAML } from 'yaml'
+ import { encode as encodeToon } from '../../packages/toon/src/index.ts'
++import { EDN_LONG_PRIMER, EDN_SHORT_PRIMER, encodeEdnMaps, encodeEdnTable } from './edn.ts'
+ 
+ /** Everything a caller must know about one data format, defined in one place. */
+ export interface Format {
+@@ -16,6 +17,8 @@ export interface Format {
+   fence: string
+   /** Human-readable label for tables and charts. */
+   displayName: string
++  /** Format label used inside the prompt; defaults to `name` (lets two conditions share one label). */
++  promptName?: string
+ }
+ 
+ /**
+@@ -69,6 +72,29 @@ export const FORMATS: Record<string, Format> = {
+     fence: 'yaml',
+     displayName: 'YAML',
+   },
++  'edn-maps': {
++    name: 'edn-maps',
++    encode: data => encodeEdnMaps(data),
++    primer: EDN_SHORT_PRIMER,
++    fence: 'edn',
++    displayName: 'EDN maps',
++  },
++  'edn-table': {
++    name: 'edn-table',
++    encode: data => encodeEdnTable(data),
++    primer: EDN_SHORT_PRIMER,
++    fence: 'edn',
++    displayName: 'EDN table',
++  },
++  // Same data block as `edn-table`; only the primer differs (H3 treatment).
++  'edn-table-primer': {
++    name: 'edn-table-primer',
++    encode: data => encodeEdnTable(data),
++    primer: EDN_LONG_PRIMER,
++    fence: 'edn',
++    displayName: 'EDN table + primer',
++    promptName: 'edn-table',
++  },
+ }
+ 
+ /**
+diff --git a/vendor/toon/benchmarks/src/structural-corruption.ts b/vendor/toon/benchmarks/src/structural-corruption.ts
+index b4460cd..0ee13a7 100644
+--- a/vendor/toon/benchmarks/src/structural-corruption.ts
++++ b/vendor/toon/benchmarks/src/structural-corruption.ts
+@@ -1,5 +1,6 @@
+ import type { Format } from './formats.ts'
+ import type { Dataset, StructuralCorruption } from './types.ts'
++import { encodeEdnMaps, encodeTable } from './edn.ts'
+ import { FORMATS } from './formats.ts'
+ 
+ /**
+@@ -289,6 +290,48 @@ export function corruptEncodedText(
+   }
+ }
+ 
++const EDN_TABLE_FORMATS = new Set(['edn-table', 'edn-table-primer'])
++
++/**
++ * Applies a structural corruption to the EDN encodings.
++ *
++ * @remarks
++ * `edn-maps` is a single line like compact JSON, so it gets the same
++ * parsed-object surgery as `json-compact`. The EDN table form mirrors TOON/CSV
++ * rows: trailing rows are dropped or appended, and width/missing-field
++ * corruption drops the targeted cell so the row is narrower than `:cols`.
++ * EDN carries no declared length, so truncation and extra rows stay valid.
++ */
++export function corruptEdn(formatName: string, data: Record<string, any>, corruption: StructuralCorruption): string {
++  const employees = data.employees as Record<string, any>[]
++
++  if (!EDN_TABLE_FORMATS.has(formatName))
++    return encodeEdnMaps(JSON.parse(corruptJsonCompactText(JSON.stringify(data), corruption)))
++
++  const cols = Object.keys(employees[0]!)
++  let rows = employees.map(e => cols.map(c => e[c]))
++
++  switch (corruption.kind) {
++    case 'control':
++      break
++    case 'truncated':
++      rows = rows.slice(0, rows.length - corruption.removeRecordCount)
++      break
++    case 'extra-rows':
++      rows = [...rows, ...corruption.appendRecords.map(e => cols.map(c => e[c] as any))]
++      break
++    case 'width-mismatch':
++    case 'missing-fields': {
++      const fieldIndex = cols.indexOf(corruption.targetFieldName)
++      const targets = new Set(corruption.targetRecordIndices)
++      rows = rows.map((row, i) => targets.has(i) ? row.filter((_, j) => j !== fieldIndex) : row)
++      break
++    }
++  }
++
++  return `{:employees ${encodeTable(cols, rows)}}`
++}
++
+ /**
+  * Encodes a dataset, applying post-encode text corruption when one is declared.
+  *
+@@ -297,6 +340,9 @@ export function corruptEncodedText(
+  * model prompts see the same corrupted text.
+  */
+ export function encodeDataset(format: Format, dataset: Dataset): string {
++  if (dataset.corruption && format.fence === 'edn')
++    return corruptEdn(format.name, dataset.data, dataset.corruption)
++
+   const text = format.encode(dataset.data)
+ 
+   return dataset.corruption
+diff --git a/vendor/toon/benchmarks/test/edn.test.ts b/vendor/toon/benchmarks/test/edn.test.ts
+new file mode 100644
+index 0000000..db253c4
+--- /dev/null
++++ b/vendor/toon/benchmarks/test/edn.test.ts
+@@ -0,0 +1,122 @@
++import * as fs from 'node:fs'
++import * as path from 'node:path'
++import { describe, expect, it } from 'vitest'
++import { decode as decodeToon } from '../../packages/toon/src/index.ts'
++import { BENCHMARKS_DIR } from '../src/constants.ts'
++import { ACCURACY_DATASETS, TOKEN_EFFICIENCY_DATASETS } from '../src/datasets.ts'
++import { decodeEdn } from '../src/edn-decode.ts'
++import { encodeEdn, encodeEdnMaps, encodeEdnTable, isKeywordSafe, isTabular } from '../src/edn.ts'
++import { FORMATS } from '../src/formats.ts'
++import { encodeDataset } from '../src/structural-corruption.ts'
++
++const REPO_ROOT = path.join(BENCHMARKS_DIR, '..', '..', '..')
++const generation = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'generation', 'records.json'), 'utf8')) as { id: string, data: unknown }[]
++const example = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'generation', 'example.json'), 'utf8'))
++
++// Key-order-sensitive deep equality: JSON.stringify follows insertion order.
++function expectIdentical(actual: unknown, expected: unknown) {
++  expect(JSON.stringify(actual)).toBe(JSON.stringify(expected))
++}
++
++const cases: [string, unknown][] = [
++  ...ACCURACY_DATASETS.map(d => [`accuracy/${d.name}`, d.data] as [string, unknown]),
++  ...TOKEN_EFFICIENCY_DATASETS.map(d => [`tokens/${d.name}`, d.data] as [string, unknown]),
++  ...generation.map(r => [`generation/${r.id}`, r.data] as [string, unknown]),
++  ['generation/example', example],
++]
++
++describe('EDN encoders are lossless (edn-data parser)', () => {
++  for (const [name, data] of cases) {
++    it(`edn-maps round-trips ${name}`, () => {
++      const text = encodeEdnMaps(data)
++      expect(text).not.toMatch(/:cols \[/)
++      expectIdentical(decodeEdn(text, { expandTables: false }), data)
++    })
++
++    it(`edn-table round-trips ${name}`, () => {
++      expectIdentical(decodeEdn(encodeEdnTable(data), { expandTables: true }), data)
++    })
++
++    it(`layout variants round-trip ${name}`, () => {
++      expectIdentical(decodeEdn(encodeEdn(data, { tables: true, rowSeparator: ' ' }), { expandTables: true }), data)
++      expectIdentical(decodeEdn(encodeEdn(data, { tables: false, topLevelArraySeparator: '\n' }), { expandTables: false }), data)
++    })
++
++    it(`toon round-trips ${name}`, () => {
++      expect(decodeToon(FORMATS.toon!.encode(data))).toEqual(data)
++    })
++  }
++})
++
++describe('EDN encoding rules', () => {
++  it('uses keywords only for keyword-safe keys', () => {
++    expect(isKeywordSafe('orderId')).toBe(true)
++    expect(isKeywordSafe('pt-BR')).toBe(true)
++    expect(isKeywordSafe('first name')).toBe(false)
++    expect(isKeywordSafe('2fa')).toBe(false)
++    expect(isKeywordSafe('-1x')).toBe(false)
++    expect(isKeywordSafe('a/b')).toBe(false)
++    expect(encodeEdnMaps({ 'first name': 'Ann', 'ok': 1 })).toBe('{"first name" "Ann" :ok 1}')
++  })
++
++  it('encodes scalars like JSON does', () => {
++    expect(encodeEdnMaps({ a: [1, 2.5, -3, null, true, false, 'x"y\n\\', ''] })).toBe('{:a [1 2.5 -3 nil true false "x\\"y\\n\\\\" ""]}')
++  })
++
++  it('tabularizes exactly the TOON-primitive-tabular arrays', () => {
++    expect(isTabular([{ a: 1, b: 'x' }, { a: 2, b: null }])).toBe(true)
++    expect(isTabular([{ a: 1, b: 'x' }, { b: 'y', a: 2 }])).toBe(false)
++    expect(isTabular([{ a: 1, b: { c: 1 } }])).toBe(false)
++    expect(isTabular([{ a: 1 }, 2])).toBe(false)
++    expect(isTabular([])).toBe(false)
++    expect(encodeEdnTable({ t: [{ a: 1, b: 'x' }, { a: 2, b: 'y' }] })).toBe('{:t {:cols [:a :b] :rows [[1 "x"]\n[2 "y"]]}}')
++  })
++
++  it('refuses source maps that collide with the table form', () => {
++    expect(() => encodeEdnTable({ cols: [], rows: [] })).toThrow()
++    expect(() => encodeEdnMaps({ x: { rows: 1, cols: 2 } })).toThrow()
++  })
++})
++
++describe('EDN structural corruption', () => {
++  const byName = Object.fromEntries(ACCURACY_DATASETS.map(d => [d.name, d]))
++  const control = byName['structural-validation-control']!
++
++  for (const fmt of ['edn-maps', 'edn-table', 'edn-table-primer']) {
++    const format = FORMATS[fmt]!
++    const expand = fmt !== 'edn-maps'
++
++    it(`${fmt}: control is the plain encoding`, () => {
++      expect(encodeDataset(format, control)).toBe(format.encode(control.data))
++    })
++
++    it(`${fmt}: truncated drops 3 records`, () => {
++      const text = encodeDataset(format, byName['structural-validation-truncated']!)
++      expect((decodeEdn(text, { expandTables: expand }) as any).employees).toHaveLength(17)
++    })
++
++    it(`${fmt}: extra rows appends 3 records`, () => {
++      const text = encodeDataset(format, byName['structural-validation-extra-rows']!)
++      expect((decodeEdn(text, { expandTables: expand }) as any).employees).toHaveLength(23)
++    })
++
++    it(`${fmt}: width mismatch removes salary from record 10`, () => {
++      const text = encodeDataset(format, byName['structural-validation-width-mismatch']!)
++      if (expand) {
++        expect(() => decodeEdn(text, { expandTables: true })).toThrow(/width/)
++        const rows = text.split('\n')
++        expect(rows[9]!.slice(1, -1).trim().length).toBeGreaterThan(0)
++      }
++      else {
++        const employees = (decodeEdn(text, { expandTables: false }) as any).employees
++        expect(employees[9].salary).toBeUndefined()
++        expect(employees[8].salary).toBeDefined()
++      }
++    })
++  }
++
++  it('edn-table-primer sends the byte-identical data block as edn-table', () => {
++    for (const d of ACCURACY_DATASETS)
++      expect(encodeDataset(FORMATS['edn-table-primer']!, d)).toBe(encodeDataset(FORMATS['edn-table']!, d))
++  })
++})
