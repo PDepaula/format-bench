@@ -1,0 +1,14 @@
+format,o200k,qwen3,gpt_tokenizer,text
+json-pretty,13,13,13,JSON: Strict JSON objects/arrays with repeated keys per row.
+json-compact,10,10,10,JSON (compact): Strict JSON without extra whitespace.
+toon,80,81,80,"TOON: Indentation-based. Arrays declare length and fields (e.g., items[N]{f1,f2}:). Rows use single delimiter. Values may be quoted. Keyed maps use key[N:]{fields}: with one `entrykey: values` row per entry. A tabular field may carry sub-fields, e.g. users[N]{name,address{city,country}}:."
+csv,15,15,15,"CSV: Header row, comma-separated values. First row contains field names."
+xml,10,10,10,XML: Tag-based tree structure with nested elements.
+yaml,13,14,13,YAML: Indentation-based key/value and lists (- items).
+edn-maps,29,28,29,"EDN: Clojure data notation. Maps {:key value}, vectors [a b c], keyword keys (:name), nil for null."
+edn-table,29,28,29,"EDN: Clojure data notation. Maps {:key value}, vectors [a b c], keyword keys (:name), nil for null."
+edn-table-primer,144,143,144,"EDN (Clojure data notation) primer:
+- Map: {key value key value ...}. Keys are keywords like :name (field name = keyword without the colon) or, if not keyword-safe, strings.
+- Vector: [a b c], elements separated by whitespace; commas are not used.
+- Values: ""strings"", numbers, true, false, nil (null).
+- Table: {:cols [:c1 :c2 ...] :rows [[v1 v2 ...] ...]} is an array of records. Each row vector is one record whose Nth value belongs to the Nth column in :cols. Each row starts on a new line; record count = number of rows."

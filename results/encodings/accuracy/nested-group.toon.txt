@@ -1,0 +1,51 @@
+contacts[50]{name,age,email,address{city,country},plan{name,price}}:
+  Halie Maggio,19,napoleon.mckenzie@yahoo.com,Carlochester,Palau,starter,15
+  Lane Stark,59,theodore_farrell@hotmail.com,New Maureenbury,Papua New Guinea,free,0
+  Rudolph Rodriguez,41,debbie23@hotmail.com,Donnellyville,Norfolk Island,free,0
+  Cory Marvin,19,ismael38@yahoo.com,Beaverton,Chile,pro,40
+  Kelli Wolf III,36,coralie_nienow@yahoo.com,Jupiter,Holy See (Vatican City State),enterprise,120
+  Bernhard Conn,34,kendra_carter@hotmail.com,Russelport,Gibraltar,pro,40
+  Milan Kreiger,61,godfrey_kshlerin25@yahoo.com,Diamond Bar,French Polynesia,starter,15
+  Brice Hamill,48,anne_hayes46@yahoo.com,East Ellafield,Tuvalu,enterprise,120
+  Cassandra Durgan,41,orlo31@yahoo.com,Fort Merritt,Cuba,free,0
+  Fannie Considine,36,neal11@hotmail.com,South Mckennamouth,Austria,enterprise,120
+  Tom Schroeder Jr.,62,jane97@hotmail.com,Fort Candaceland,French Guiana,free,0
+  Claude Zboncak,65,brooke31@yahoo.com,High Point,Wallis and Futuna,pro,40
+  Miss Thora Heathcote-Schumm,78,tanya.nader50@gmail.com,Baronland,Mongolia,pro,40
+  Colt Hamill,58,tom_olson@yahoo.com,Fort Brittanyland,Uzbekistan,starter,15
+  Rodney Hammes,69,mozelle47@hotmail.com,Armstrongbury,Saudi Arabia,free,0
+  Alejandro Runolfsdottir,60,coralie.bernhard39@hotmail.com,South Irvin,Anguilla,free,0
+  Efrain Casper,75,erich.jenkins85@hotmail.com,Eden Prairie,Senegal,starter,15
+  Jerrod Price,28,hilbert_considine@yahoo.com,Vonberg,Djibouti,starter,15
+  Carli Kreiger,58,ron_mills-metz@hotmail.com,North Giovanni,Somalia,enterprise,120
+  Iva Muller PhD,58,pascale_luettgen-batz54@yahoo.com,Fernandoborough,French Polynesia,starter,15
+  Eula Weimann,77,christy.jast77@gmail.com,South Gate,New Zealand,starter,15
+  Joannie Schowalter,37,kristie_abbott-wilderman@gmail.com,East Hal,Oman,pro,40
+  Mr. Eric McLaughlin MD,20,jarod_grimes66@yahoo.com,Kuhicburgh,Curaçao,pro,40
+  Efren Hodkiewicz,62,sherri49@yahoo.com,New Fletcher,Qatar,pro,40
+  Mae Kirlin-Christiansen,67,zoey.pagac73@gmail.com,Lodi,Ireland,free,0
+  April Reichert DVM,25,steve.powlowski@yahoo.com,Hampton,Guyana,pro,40
+  Ms. Ebony Carter V,55,bret61@gmail.com,Lennafort,Luxembourg,free,0
+  Monica Botsford,42,kirk.davis@gmail.com,Temecula,Antigua and Barbuda,free,0
+  Lucas Cruickshank,64,lyda.ratke51@hotmail.com,Mirandaburgh,Saint Vincent and the Grenadines,enterprise,120
+  Giovanni Goodwin Sr.,37,kaelyn25@gmail.com,Crooksburgh,Congo,enterprise,120
+  Julian Price,66,darrin_bradtke45@hotmail.com,Oxnard,Svalbard & Jan Mayen Islands,free,0
+  Ervin Zulauf,65,bryan27@gmail.com,Santa Monica,Faroe Islands,pro,40
+  Ashleigh Little,41,salvatore.dubuque@yahoo.com,New Bernice,Argentina,free,0
+  Mrs. Ladarius Wilkinson,60,marjorie15@hotmail.com,Fort Raquel,Thailand,free,0
+  Joe Renner,78,sammy77@gmail.com,West Dianne,Panama,enterprise,120
+  Mrs. Belinda Bashirian,43,vince36@yahoo.com,Montytown,North Macedonia,enterprise,120
+  Kathleen Goldner Jr.,43,alexzander65@yahoo.com,East Nicolascester,Turkey,free,0
+  Salma Mante,42,joelle_oconner88@gmail.com,North Donnell,Vanuatu,pro,40
+  Christ O'Reilly,47,lou_hartmann85@yahoo.com,Hilllshire,Guernsey,free,0
+  June Zieme PhD,21,cary_effertz98@gmail.com,North Okeyfort,Montenegro,starter,15
+  Ron Cremin,78,yvette_bechtelar47@hotmail.com,Bartolettiborough,Faroe Islands,enterprise,120
+  Jaylen Blick,24,don94@hotmail.com,Levittown,Puerto Rico,free,0
+  Andrea Abernathy DDS,31,mariela_nitzsche52@yahoo.com,West Fatimahaven,Germany,enterprise,120
+  Ivan Vandervort MD,34,amy_brown31@hotmail.com,Yostworth,Aruba,starter,15
+  Nicholas Predovic,28,earnest48@gmail.com,Mortonmouth,Nigeria,starter,15
+  Magnus McGlynn,33,opal.jerde73@hotmail.com,West Jedediahton,Singapore,starter,15
+  Priscilla Sipes,58,sergio89@yahoo.com,Venahaven,Bolivia,pro,40
+  Kelli Kovacek,19,danika_jast76@yahoo.com,Torphyworth,Democratic Republic of the Congo,pro,40
+  Nichole Wolff,35,irvin89@yahoo.com,Springfield,Dominican Republic,pro,40
+  Earl Feest,41,adrianna.stoltenberg@yahoo.com,Adamsview,Namibia,enterprise,120

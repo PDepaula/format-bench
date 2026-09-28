@@ -1,0 +1,158 @@
+model,served_model,seed,batch_id,format,dataset,track,shape,question_id,type,answer_type,position,batch_size,expected,answer,parsed,correct,correct_lenient,error_class,verbose
+haiku,claude-haiku-4-5-20251001,1,s1-b031,json-compact,structural-validation-truncated,flat,structural-validation,q241,structural-validation,boolean,1,1,NO,YES,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,2,s2-b053,edn-table-primer,tabular,flat,uniform-tables,q23,filtering,integer,1,8,12,7,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,2,s2-b053,edn-table-primer,tabular,flat,uniform-tables,q1,field-retrieval,integer,2,8,146288,146288,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,2,s2-b053,edn-table-primer,tabular,flat,uniform-tables,q13,aggregation,integer,3,8,17,13,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,2,s2-b053,edn-table-primer,tabular,flat,uniform-tables,q34,filtering,integer,4,8,14,10,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,2,s2-b053,edn-table-primer,tabular,flat,uniform-tables,q22,aggregation,integer,5,8,17,13,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,2,s2-b053,edn-table-primer,tabular,flat,uniform-tables,q27,filtering,integer,6,8,10,5,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,2,s2-b053,edn-table-primer,tabular,flat,uniform-tables,q19,aggregation,integer,7,8,100,100,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,2,s2-b053,edn-table-primer,tabular,flat,uniform-tables,q30,filtering,integer,8,8,26,30,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,1,s1-b003,csv,tabular,flat,uniform-tables,q27,filtering,integer,1,8,10,6,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,1,s1-b003,csv,tabular,flat,uniform-tables,q10,field-retrieval,boolean,2,8,yes,1,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,1,s1-b003,csv,tabular,flat,uniform-tables,q2,field-retrieval,string,3,8,Marketing,Marketing,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,1,s1-b003,csv,tabular,flat,uniform-tables,q32,filtering,integer,4,8,8,8,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,1,s1-b003,csv,tabular,flat,uniform-tables,q7,field-retrieval,string,5,8,Engineering,Engineering,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,1,s1-b003,csv,tabular,flat,uniform-tables,q9,field-retrieval,integer,6,8,11,11,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,1,s1-b003,csv,tabular,flat,uniform-tables,q5,field-retrieval,boolean,7,8,yes,1,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,1,s1-b003,csv,tabular,flat,uniform-tables,q11,field-retrieval,integer,8,8,67666,67666,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,3,s3-b071,json-compact,nested,mixed,mixed,q66,filtering,integer,1,8,5,5,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,3,s3-b071,json-compact,nested,mixed,mixed,q222,structure-awareness,csv-list-ordered,2,8,"orderId,customer,items,subtotal,tax,total,status,orderDate","orderId,customer,items,subtotal,tax,total,status,orderDate",1,1,1,,0
+haiku,claude-haiku-4-5-20251001,3,s3-b071,json-compact,nested,mixed,mixed,q45,field-retrieval,string,3,8,lane.veum15@gmail.com,lane.veum15@gmail.com,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,3,s3-b071,json-compact,nested,mixed,mixed,q48,field-retrieval,string,4,8,Mr. Sidney Nikolaus,Mr. Sidney Nikolaus,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,3,s3-b071,json-compact,nested,mixed,mixed,q69,filtering,integer,5,8,25,32,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,3,s3-b071,json-compact,nested,mixed,mixed,q67,filtering,integer,6,8,7,6,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,3,s3-b071,json-compact,nested,mixed,mixed,q64,filtering,integer,7,8,8,6,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,3,s3-b071,json-compact,nested,mixed,mixed,q63,filtering,integer,8,8,10,8,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,3,s3-b087,csv,github,flat,uniform-tables,q99,field-retrieval,string,1,8,master,master,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,3,s3-b087,csv,github,flat,uniform-tables,q102,field-retrieval,integer,2,8,6623,6623,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,3,s3-b087,csv,github,flat,uniform-tables,q122,filtering,integer,3,8,6,28,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,3,s3-b087,csv,github,flat,uniform-tables,q115,aggregation,integer,4,8,22,32,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,3,s3-b087,csv,github,flat,uniform-tables,q98,field-retrieval,integer,5,8,6594,6594,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,3,s3-b087,csv,github,flat,uniform-tables,q96,field-retrieval,integer,6,8,530712,530712,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,3,s3-b087,csv,github,flat,uniform-tables,q105,field-retrieval,integer,7,8,8303,8303,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,3,s3-b087,csv,github,flat,uniform-tables,q123,filtering,integer,8,8,1,7,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,3,s3-b074,edn-table,nested-group,mixed,mixed,q213,structure-awareness,string,1,9,email,address,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,3,s3-b074,edn-table,nested-group,mixed,mixed,q209,structure-awareness,integer,2,9,50,50,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,3,s3-b074,edn-table,nested-group,mixed,mixed,q211,structure-awareness,csv-list-ordered,3,9,"city,country","city, country",1,1,1,,0
+haiku,claude-haiku-4-5-20251001,3,s3-b074,edn-table,nested-group,mixed,mixed,q197,field-retrieval,string,4,9,Carlochester,Carlochester,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,3,s3-b074,edn-table,nested-group,mixed,mixed,q203,field-retrieval,string,5,9,Somalia,Somalia,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,3,s3-b074,edn-table,nested-group,mixed,mixed,q205,field-retrieval,integer,6,9,0,0,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,3,s3-b074,edn-table,nested-group,mixed,mixed,q206,field-retrieval,integer,7,9,42,42,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,3,s3-b074,edn-table,nested-group,mixed,mixed,q199,field-retrieval,string,8,9,starter,starter,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,3,s3-b074,edn-table,nested-group,mixed,mixed,q201,field-retrieval,integer,9,9,78,78,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,3,s3-b084,edn-table-primer,nested-config,mixed,nested-config,q163,aggregation,integer,1,10,2,2,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,3,s3-b084,edn-table-primer,nested-config,mixed,nested-config,q154,field-retrieval,integer,2,10,35,35,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,3,s3-b084,edn-table-primer,nested-config,mixed,nested-config,q157,field-retrieval,integer,3,10,30000,30000,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,3,s3-b084,edn-table-primer,nested-config,mixed,nested-config,q176,filtering,integer,4,10,1,1,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,3,s3-b084,edn-table-primer,nested-config,mixed,nested-config,q172,aggregation,integer,5,10,1,1,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,3,s3-b084,edn-table-primer,nested-config,mixed,nested-config,q166,aggregation,integer,6,10,1,1,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,3,s3-b084,edn-table-primer,nested-config,mixed,nested-config,q179,filtering,integer,7,10,1,1,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,3,s3-b084,edn-table-primer,nested-config,mixed,nested-config,q161,aggregation,integer,8,10,3,3,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,3,s3-b084,edn-table-primer,nested-config,mixed,nested-config,q173,aggregation,integer,9,10,0,0,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,3,s3-b084,edn-table-primer,nested-config,mixed,nested-config,q167,aggregation,integer,10,10,1,1,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,2,s2-b040,json-compact,nested,mixed,mixed,q67,filtering,integer,1,8,7,7,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,2,s2-b040,json-compact,nested,mixed,mixed,q50,field-retrieval,string,2,8,2025-04-25,2025-04-25,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,2,s2-b040,json-compact,nested,mixed,mixed,q225,structure-awareness,string,3,8,cancelled,cancelled,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,2,s2-b040,json-compact,nested,mixed,mixed,q53,aggregation,integer,4,8,10,8,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,2,s2-b040,json-compact,nested,mixed,mixed,q223,structure-awareness,integer,5,8,4,4,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,2,s2-b040,json-compact,nested,mixed,mixed,q51,field-retrieval,integer,6,8,1,1,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,2,s2-b040,json-compact,nested,mixed,mixed,q44,field-retrieval,string,7,8,Gregoria Mosciski,Gregoria Mosciski,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,2,s2-b040,json-compact,nested,mixed,mixed,q46,field-retrieval,string,8,8,2025-05-14,2025-05-14,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,2,s2-b053,json-compact,tabular,flat,uniform-tables,q23,filtering,integer,1,8,12,Engineering employees with salary > 80000,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,2,s2-b053,json-compact,tabular,flat,uniform-tables,q1,field-retrieval,integer,2,8,146288,Darla Mertz MD salary,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,2,s2-b053,json-compact,tabular,flat,uniform-tables,q13,aggregation,integer,3,8,17,Total Engineering employees,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,2,s2-b053,json-compact,tabular,flat,uniform-tables,q34,filtering,integer,4,8,14,Active Engineering employees,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,2,s2-b053,json-compact,tabular,flat,uniform-tables,q22,aggregation,integer,5,8,17,Inactive employees,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,2,s2-b053,json-compact,tabular,flat,uniform-tables,q27,filtering,integer,6,8,10,Operations employees with salary > 80000,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,2,s2-b053,json-compact,tabular,flat,uniform-tables,q19,aggregation,integer,7,8,100,Total employees,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,2,s2-b053,json-compact,tabular,flat,uniform-tables,q30,filtering,integer,8,8,26,Active employees with > 15 years experience,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,3,s3-b071,toon,nested,mixed,mixed,q66,filtering,integer,1,8,5,"How many orders have status ""pending"" and at least 3 items?",1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,3,s3-b071,toon,nested,mixed,mixed,q222,structure-awareness,csv-list-ordered,2,8,"orderId,customer,items,subtotal,tax,total,status,orderDate","List the top-level field names for orders (comma-separated, in order)",1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,3,s3-b071,toon,nested,mixed,mixed,q45,field-retrieval,string,3,8,lane.veum15@gmail.com,What is the customer email for order ORD-0004?,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,3,s3-b071,toon,nested,mixed,mixed,q48,field-retrieval,string,4,8,Mr. Sidney Nikolaus,What is the customer name for order ORD-0010?,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,3,s3-b071,toon,nested,mixed,mixed,q69,filtering,integer,5,8,25,How many orders have a total greater than 300 and at least 3 items?,1,0,0,comprehension,1
+haiku,claude-haiku-4-5-20251001,3,s3-b071,toon,nested,mixed,mixed,q67,filtering,integer,6,8,7,"How many orders have status ""processing"" and at least 3 items?",1,0,0,comprehension,1
+haiku,claude-haiku-4-5-20251001,3,s3-b071,toon,nested,mixed,mixed,q64,filtering,integer,7,8,8,"How many orders have status ""shipped"" and total greater than 300?",1,0,0,comprehension,1
+haiku,claude-haiku-4-5-20251001,3,s3-b071,toon,nested,mixed,mixed,q63,filtering,integer,8,8,10,"How many orders have status ""processing"" and total greater than 300?",1,0,0,comprehension,1
+haiku,claude-haiku-4-5-20251001,3,s3-b077,json-compact,event-logs,mixed,mixed,q145,filtering,integer,1,10,26,"Level ""error"" AND status code >= 400",1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,3,s3-b077,json-compact,event-logs,mixed,mixed,q130,field-retrieval,integer,2,10,452,Status code at 2025-05-27T21:08:41.492Z,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,3,s3-b077,json-compact,event-logs,mixed,mixed,q147,filtering,integer,3,10,5,"Endpoint ""/api/users"" AND status code >= 500",1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,3,s3-b077,json-compact,event-logs,mixed,mixed,q125,field-retrieval,string,4,10,/api/orders,Endpoint at 2025-05-31T02:14:17.408Z,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,3,s3-b077,json-compact,event-logs,mixed,mixed,q124,field-retrieval,string,5,10,warn,Level at 2025-05-26T04:41:11.378Z,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,3,s3-b077,json-compact,event-logs,mixed,mixed,q144,filtering,integer,6,10,6,"Level ""warn"" AND status code >= 400",1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,3,s3-b077,json-compact,event-logs,mixed,mixed,q148,filtering,integer,7,10,6,"Endpoint ""/api/orders"" AND status code >= 500",1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,3,s3-b077,json-compact,event-logs,mixed,mixed,q138,aggregation,integer,8,10,26,"Level ""error""",1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,3,s3-b077,json-compact,event-logs,mixed,mixed,q149,filtering,integer,9,10,2,"Endpoint ""/api/products"" with retryable error",1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,3,s3-b077,json-compact,event-logs,mixed,mixed,q127,field-retrieval,integer,10,10,762,Response time at 2025-05-31T01:55:22.314Z,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,3,s3-b078,edn-table,event-logs,mixed,mixed,q239,structure-awareness,string,1,10,info,warn,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,3,s3-b078,edn-table,event-logs,mixed,mixed,q135,aggregation,number,2,10,2534.13,2559,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,3,s3-b078,edn-table,event-logs,mixed,mixed,q133,field-retrieval,string,3,10,/api/users,/api/users,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,3,s3-b078,edn-table,event-logs,mixed,mixed,q132,field-retrieval,string,4,10,info,info,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,3,s3-b078,edn-table,event-logs,mixed,mixed,q238,structure-awareness,csv-list-unordered,5,10,"timestamp,level,endpoint,statusCode,responseTime,userId,error","timestamp,level,endpoint,statusCode,responseTime,userId,error,message,stack,retryable",1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,3,s3-b078,edn-table,event-logs,mixed,mixed,q141,aggregation,integer,6,10,32,60,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,3,s3-b078,edn-table,event-logs,mixed,mixed,q143,aggregation,integer,7,10,23,38,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,3,s3-b078,edn-table,event-logs,mixed,mixed,q150,filtering,integer,8,10,7,7,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,3,s3-b078,edn-table,event-logs,mixed,mixed,q136,aggregation,integer,9,10,17,17,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,3,s3-b078,edn-table,event-logs,mixed,mixed,q134,aggregation,integer,10,10,75,100,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,1,s1-b028,edn-maps,nested-config,mixed,nested-config,q173,aggregation,integer,1,9,0,1,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,1,s1-b028,edn-maps,nested-config,mixed,nested-config,q159,field-retrieval,integer,2,9,3600,3600,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,1,s1-b028,edn-maps,nested-config,mixed,nested-config,q172,aggregation,integer,3,9,1,1,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,1,s1-b028,edn-maps,nested-config,mixed,nested-config,q161,aggregation,integer,4,9,3,3,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,1,s1-b028,edn-maps,nested-config,mixed,nested-config,q164,aggregation,integer,5,9,2,2,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,1,s1-b028,edn-maps,nested-config,mixed,nested-config,q176,filtering,integer,6,9,1,1,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,1,s1-b028,edn-maps,nested-config,mixed,nested-config,q170,aggregation,integer,7,9,5,7,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,1,s1-b028,edn-maps,nested-config,mixed,nested-config,q165,aggregation,integer,8,9,3,3,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,1,s1-b028,edn-maps,nested-config,mixed,nested-config,q169,aggregation,integer,9,9,8,10,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,3,s3-b092,edn-table,structural-validation-width-mismatch,flat,structural-validation,q243,structural-validation,boolean,1,1,NO,NO,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,1,s1-b000,json-compact,tabular,flat,uniform-tables,q220,structure-awareness,integer,1,9,7,8,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,1,s1-b000,json-compact,tabular,flat,uniform-tables,q6,field-retrieval,integer,2,9,121951,121951,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,1,s1-b000,json-compact,tabular,flat,uniform-tables,q217,structure-awareness,string,3,9,email,name,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,1,s1-b000,json-compact,tabular,flat,uniform-tables,q26,filtering,integer,4,9,12,6,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,1,s1-b000,json-compact,tabular,flat,uniform-tables,q20,aggregation,integer,5,9,102543,107625,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,1,s1-b000,json-compact,tabular,flat,uniform-tables,q24,filtering,integer,6,9,12,13,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,1,s1-b000,json-compact,tabular,flat,uniform-tables,q3,field-retrieval,string,7,9,omari33@hotmail.com,omari33@hotmail.com,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,1,s1-b000,json-compact,tabular,flat,uniform-tables,q23,filtering,integer,8,9,12,11,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,1,s1-b000,json-compact,tabular,flat,uniform-tables,q13,aggregation,integer,9,9,17,14,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,2,s2-b050,csv,tabular,flat,uniform-tables,q15,aggregation,integer,1,8,17,15,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,2,s2-b050,csv,tabular,flat,uniform-tables,q21,aggregation,integer,2,8,83,92,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,2,s2-b050,csv,tabular,flat,uniform-tables,q219,structure-awareness,string,3,8,Aaron Vandervort,Aaron Vandervort,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,2,s2-b050,csv,tabular,flat,uniform-tables,q26,filtering,integer,4,8,12,6,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,2,s2-b050,csv,tabular,flat,uniform-tables,q14,aggregation,integer,5,8,17,14,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,2,s2-b050,csv,tabular,flat,uniform-tables,q220,structure-awareness,integer,6,8,7,7,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,2,s2-b050,csv,tabular,flat,uniform-tables,q3,field-retrieval,string,7,8,omari33@hotmail.com,omari33@hotmail.com,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,2,s2-b050,csv,tabular,flat,uniform-tables,q9,field-retrieval,integer,8,8,11,11,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,3,s3-b070,edn-maps,nested,mixed,mixed,q60,aggregation,integer,1,8,34,Counting orders with total > 400:,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,3,s3-b070,edn-maps,nested,mixed,mixed,q40,field-retrieval,number,2,8,365.99,Order ORD-0009 total:,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,3,s3-b070,edn-maps,nested,mixed,mixed,q55,aggregation,number,3,8,36910.00,Sum of all order totals:,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,3,s3-b070,edn-maps,nested,mixed,mixed,q225,structure-awareness,string,4,8,cancelled,Last order status:,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,3,s3-b070,edn-maps,nested,mixed,mixed,q41,field-retrieval,string,5,8,pending,Order ORD-0011 status:,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,3,s3-b070,edn-maps,nested,mixed,mixed,q50,field-retrieval,string,6,8,2025-04-25,Order ORD-0014 order date:,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,3,s3-b070,edn-maps,nested,mixed,mixed,q53,aggregation,integer,7,8,10,"Counting orders with status ""processing"":",1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,3,s3-b070,edn-maps,nested,mixed,mixed,q38,field-retrieval,number,8,8,1008.94,Order ORD-0005 total:,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,3,s3-b091,json-compact,keyed,mixed,mixed,q191,field-retrieval,boolean,1,8,yes,true,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,3,s3-b091,json-compact,keyed,mixed,mixed,q194,structure-awareness,string,2,8,rollout,enabled,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,3,s3-b091,json-compact,keyed,mixed,mixed,q190,field-retrieval,string,3,8,Donald,Donald,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,3,s3-b091,json-compact,keyed,mixed,mixed,q181,field-retrieval,string,4,8,Annabelle,Annabelle,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,3,s3-b091,json-compact,keyed,mixed,mixed,q180,field-retrieval,integer,5,8,19,19,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,3,s3-b091,json-compact,keyed,mixed,mixed,q196,structure-awareness,integer,6,8,4,4,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,3,s3-b091,json-compact,keyed,mixed,mixed,q192,structure-awareness,integer,7,8,40,40,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,3,s3-b091,json-compact,keyed,mixed,mixed,q189,field-retrieval,integer,8,8,80,80,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,2,s2-b046,edn-maps,analytics,flat,uniform-tables,q75,field-retrieval,integer,1,10,5611,5611,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,2,s2-b046,edn-maps,analytics,flat,uniform-tables,q229,structure-awareness,string,2,10,revenue,conversions,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,2,s2-b046,edn-maps,analytics,flat,uniform-tables,q79,field-retrieval,integer,3,10,5993,5993,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,2,s2-b046,edn-maps,analytics,flat,uniform-tables,q230,structure-awareness,string,4,10,2025-03-01,2025-03-01,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,2,s2-b046,edn-maps,analytics,flat,uniform-tables,q89,filtering,integer,5,10,20,19,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,2,s2-b046,edn-maps,analytics,flat,uniform-tables,q227,structure-awareness,integer,6,10,60,60,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,2,s2-b046,edn-maps,analytics,flat,uniform-tables,q94,filtering,integer,7,10,26,25,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,2,s2-b046,edn-maps,analytics,flat,uniform-tables,q82,aggregation,integer,8,10,1616,1618,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,2,s2-b046,edn-maps,analytics,flat,uniform-tables,q85,aggregation,integer,9,10,20,23,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,2,s2-b046,edn-maps,analytics,flat,uniform-tables,q78,field-retrieval,integer,10,10,21,21,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,3,s3-b065,json-compact,tabular,flat,uniform-tables,q10,field-retrieval,boolean,1,8,yes,true,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,3,s3-b065,json-compact,tabular,flat,uniform-tables,q28,filtering,integer,2,8,60,70,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,3,s3-b065,json-compact,tabular,flat,uniform-tables,q19,aggregation,integer,3,8,100,100,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,3,s3-b065,json-compact,tabular,flat,uniform-tables,q15,aggregation,integer,4,8,17,15,1,0,0,comprehension,0
+haiku,claude-haiku-4-5-20251001,3,s3-b065,json-compact,tabular,flat,uniform-tables,q4,field-retrieval,integer,5,8,13,13,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,3,s3-b065,json-compact,tabular,flat,uniform-tables,q8,field-retrieval,string,6,8,erik_metz@yahoo.com,erik_metz@yahoo.com,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,3,s3-b065,json-compact,tabular,flat,uniform-tables,q215,structure-awareness,integer,7,8,100,100,1,1,1,,0
+haiku,claude-haiku-4-5-20251001,3,s3-b065,json-compact,tabular,flat,uniform-tables,q7,field-retrieval,string,8,8,Engineering,Engineering,1,1,1,,0

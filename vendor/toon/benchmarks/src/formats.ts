@@ -3,6 +3,7 @@ import { stringify as stringifyCSV } from 'csv-stringify/sync'
 import { XMLBuilder } from 'fast-xml-parser'
 import { stringify as stringifyYAML } from 'yaml'
 import { encode as encodeToon } from '../../packages/toon/src/index.ts'
+import { EDN_LONG_PRIMER, EDN_SHORT_PRIMER, encodeEdnMaps, encodeEdnTable } from './edn.ts'
 
 /** Everything a caller must know about one data format, defined in one place. */
 export interface Format {
@@ -16,6 +17,8 @@ export interface Format {
   fence: string
   /** Human-readable label for tables and charts. */
   displayName: string
+  /** Format label used inside the prompt; defaults to `name` (lets two conditions share one label). */
+  promptName?: string
 }
 
 /**
@@ -68,6 +71,29 @@ export const FORMATS: Record<string, Format> = {
     primer: 'YAML: Indentation-based key/value and lists (- items).',
     fence: 'yaml',
     displayName: 'YAML',
+  },
+  'edn-maps': {
+    name: 'edn-maps',
+    encode: data => encodeEdnMaps(data),
+    primer: EDN_SHORT_PRIMER,
+    fence: 'edn',
+    displayName: 'EDN maps',
+  },
+  'edn-table': {
+    name: 'edn-table',
+    encode: data => encodeEdnTable(data),
+    primer: EDN_SHORT_PRIMER,
+    fence: 'edn',
+    displayName: 'EDN table',
+  },
+  // Same data block as `edn-table`; only the primer differs (H3 treatment).
+  'edn-table-primer': {
+    name: 'edn-table-primer',
+    encode: data => encodeEdnTable(data),
+    primer: EDN_LONG_PRIMER,
+    fence: 'edn',
+    displayName: 'EDN table + primer',
+    promptName: 'edn-table',
   },
 }
 

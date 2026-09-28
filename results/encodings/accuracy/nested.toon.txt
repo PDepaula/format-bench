@@ -1,0 +1,721 @@
+orders[50]:
+  - orderId: ORD-0001
+    customer:
+      id: 1
+      name: Marley Schmitt
+      email: krystel_ullrich@hotmail.com
+      phone: 340-337-8638
+    items[3]{sku,name,quantity,price}:
+      SKU-BNZH4B,Wireless Mouse,5,103.64
+      SKU-RJOXPK,USB Cable,2,14.32
+      SKU-ZNGW3V,Laptop Stand,5,109.55
+    subtotal: 1094.59
+    tax: 87.57
+    total: 1182.16
+    status: pending
+    orderDate: 2025-03-03
+  - orderId: ORD-0002
+    customer:
+      id: 2
+      name: Gregoria Mosciski
+      email: ed_thiel@yahoo.com
+      phone: 875.430.3789
+    items[2]{sku,name,quantity,price}:
+      SKU-UBXWCU,Wireless Mouse,5,90.37
+      SKU-YREKMM,USB Cable,5,104.84
+    subtotal: 976.05
+    tax: 78.08
+    total: 1054.13
+    status: processing
+    orderDate: 2025-04-22
+  - orderId: ORD-0003
+    customer:
+      id: 3
+      name: Benjamin Cruickshank
+      email: jacob23@gmail.com
+      phone: 375-453-1465 x6044
+    items[3]{sku,name,quantity,price}:
+      SKU-O7J5TA,Wireless Mouse,5,32.37
+      SKU-C6KXRX,USB Cable,3,170.69
+      SKU-V5Y166,Laptop Stand,5,116.66
+    subtotal: 1257.22
+    tax: 100.58
+    total: 1357.8
+    status: shipped
+    orderDate: 2025-05-07
+  - orderId: ORD-0004
+    customer:
+      id: 4
+      name: Dorothea Armstrong
+      email: lane.veum15@gmail.com
+      phone: (909) 823-2064 x35721
+    items[2]{sku,name,quantity,price}:
+      SKU-P4HNQB,Wireless Mouse,2,186.81
+      SKU-YYZ1JO,USB Cable,4,105.9
+    subtotal: 797.22
+    tax: 63.78
+    total: 861
+    status: delivered
+    orderDate: 2025-04-02
+  - orderId: ORD-0005
+    customer:
+      id: 5
+      name: Onie Hansen
+      email: demario_schneider@hotmail.com
+      phone: (890) 892-2831
+    items[1]{sku,name,quantity,price}:
+      SKU-U2QANE,Wireless Mouse,5,186.84
+    subtotal: 934.2
+    tax: 74.74
+    total: 1008.94
+    status: cancelled
+    orderDate: 2025-04-13
+  - orderId: ORD-0006
+    customer:
+      id: 6
+      name: Alvera Leffler
+      email: gregg28@hotmail.com
+      phone: 591.557.4128 x68912
+    items[1]{sku,name,quantity,price}:
+      SKU-QMFZIH,Wireless Mouse,3,116.56
+    subtotal: 349.68
+    tax: 27.97
+    total: 377.65
+    status: pending
+    orderDate: 2025-05-14
+  - orderId: ORD-0007
+    customer:
+      id: 7
+      name: Ms. Ruth Hamill
+      email: zion_goldner@hotmail.com
+      phone: 709.264.8484 x1192
+    items[4]{sku,name,quantity,price}:
+      SKU-BYJFVR,Wireless Mouse,1,126.85
+      SKU-ETRK63,USB Cable,5,124.45
+      SKU-Y3JJYF,Laptop Stand,1,79.98
+      SKU-0CCNAZ,Keyboard,5,101.8
+    subtotal: 1338.08
+    tax: 107.05
+    total: 1445.13
+    status: processing
+    orderDate: 2025-03-17
+  - orderId: ORD-0008
+    customer:
+      id: 8
+      name: Elenora Streich
+      email: anita_bins2@yahoo.com
+      phone: (527) 614-6506 x689
+    items[3]{sku,name,quantity,price}:
+      SKU-4VIKF8,Wireless Mouse,5,91.06
+      SKU-WBRMVB,USB Cable,4,37.55
+      SKU-SRKJ3J,Laptop Stand,3,12.06
+    subtotal: 641.68
+    tax: 51.33
+    total: 693.01
+    status: shipped
+    orderDate: 2025-03-31
+  - orderId: ORD-0009
+    customer:
+      id: 9
+      name: Stanley Nikolaus
+      email: randolph64@hotmail.com
+      phone: 497.519.8399
+    items[1]{sku,name,quantity,price}:
+      SKU-XGNWGE,Wireless Mouse,4,84.72
+    subtotal: 338.88
+    tax: 27.11
+    total: 365.99
+    status: delivered
+    orderDate: 2025-04-11
+  - orderId: ORD-0010
+    customer:
+      id: 10
+      name: Mr. Sidney Nikolaus
+      email: julian.hand90@gmail.com
+      phone: 258.778.1039 x5229
+    items[1]{sku,name,quantity,price}:
+      SKU-GFFMH8,Wireless Mouse,5,33.89
+    subtotal: 169.45
+    tax: 13.56
+    total: 183.01
+    status: cancelled
+    orderDate: 2025-05-17
+  - orderId: ORD-0011
+    customer:
+      id: 11
+      name: Mr. Sedrick Wehner
+      email: joann_pfannerstill@gmail.com
+      phone: 681-289-3453 x705
+    items[3]{sku,name,quantity,price}:
+      SKU-3MHUAP,Wireless Mouse,1,49.04
+      SKU-VUHRDF,USB Cable,2,53.07
+      SKU-GD55DJ,Laptop Stand,3,117.2
+    subtotal: 506.78
+    tax: 40.54
+    total: 547.32
+    status: pending
+    orderDate: 2025-04-09
+  - orderId: ORD-0012
+    customer:
+      id: 12
+      name: Drew Mitchell
+      email: elmo_bernier@gmail.com
+      phone: (721) 768-8272 x4380
+    items[3]{sku,name,quantity,price}:
+      SKU-HFNTH1,Wireless Mouse,4,109.34
+      SKU-QPZLEB,USB Cable,5,172.19
+      SKU-TGRFSD,Laptop Stand,3,34.37
+    subtotal: 1401.42
+    tax: 112.11
+    total: 1513.53
+    status: processing
+    orderDate: 2025-03-24
+  - orderId: ORD-0013
+    customer:
+      id: 13
+      name: Clifton Wehner
+      email: nyasia.thompson79@hotmail.com
+      phone: 385-304-3091 x181
+    items[2]{sku,name,quantity,price}:
+      SKU-VSQOMZ,Wireless Mouse,2,181.52
+      SKU-YFL3MW,USB Cable,1,65.4
+    subtotal: 428.44
+    tax: 34.28
+    total: 462.72
+    status: shipped
+    orderDate: 2025-05-06
+  - orderId: ORD-0014
+    customer:
+      id: 14
+      name: Sandrine Kuphal
+      email: jaime82@gmail.com
+      phone: 499-563-3872 x952
+    items[3]{sku,name,quantity,price}:
+      SKU-KZOQIQ,Wireless Mouse,2,123.72
+      SKU-GCN3PN,USB Cable,4,56.02
+      SKU-VK6AYT,Laptop Stand,5,35.12
+    subtotal: 647.12
+    tax: 51.77
+    total: 698.89
+    status: delivered
+    orderDate: 2025-04-25
+  - orderId: ORD-0015
+    customer:
+      id: 15
+      name: Alberta Jones Jr.
+      email: eugene_abbott8@gmail.com
+      phone: 977.472.1625 x3849
+    items[2]{sku,name,quantity,price}:
+      SKU-SKXAW9,Wireless Mouse,2,196.56
+      SKU-2XWNRB,USB Cable,3,63.2
+    subtotal: 582.72
+    tax: 46.62
+    total: 629.34
+    status: cancelled
+    orderDate: 2025-03-17
+  - orderId: ORD-0016
+    customer:
+      id: 16
+      name: Adelle Ruecker
+      email: braden_cummings@yahoo.com
+      phone: 252-409-2574 x037
+    items[1]{sku,name,quantity,price}:
+      SKU-XLADTU,Wireless Mouse,5,172.22
+    subtotal: 861.1
+    tax: 68.89
+    total: 929.99
+    status: pending
+    orderDate: 2025-04-01
+  - orderId: ORD-0017
+    customer:
+      id: 17
+      name: Celia Cummings
+      email: matthew55@gmail.com
+      phone: 1-758-489-2727 x7137
+    items[3]{sku,name,quantity,price}:
+      SKU-6JIYJW,Wireless Mouse,4,61.7
+      SKU-SQLMBU,USB Cable,4,195.42
+      SKU-AOIPN9,Laptop Stand,4,149.11
+    subtotal: 1624.92
+    tax: 129.99
+    total: 1754.91
+    status: processing
+    orderDate: 2025-04-14
+  - orderId: ORD-0018
+    customer:
+      id: 18
+      name: Wilbert Parker
+      email: geovanni_pfeffer82@hotmail.com
+      phone: 1-761-424-7471
+    items[1]{sku,name,quantity,price}:
+      SKU-NTSTXB,Wireless Mouse,1,130.9
+    subtotal: 130.9
+    tax: 10.47
+    total: 141.37
+    status: shipped
+    orderDate: 2025-04-12
+  - orderId: ORD-0019
+    customer:
+      id: 19
+      name: Carol Huels
+      email: carli84@hotmail.com
+      phone: 577-210-6412 x27085
+    items[3]{sku,name,quantity,price}:
+      SKU-BAMQ8P,Wireless Mouse,5,157.38
+      SKU-J9QOQ5,USB Cable,1,103.28
+      SKU-2IJYNN,Laptop Stand,3,177.63
+    subtotal: 1423.07
+    tax: 113.85
+    total: 1536.92
+    status: delivered
+    orderDate: 2025-05-17
+  - orderId: ORD-0020
+    customer:
+      id: 20
+      name: Wayne Cummings
+      email: inez.koepp@gmail.com
+      phone: 589-514-2261 x2129
+    items[3]{sku,name,quantity,price}:
+      SKU-QGR0P9,Wireless Mouse,1,69.02
+      SKU-94RPK2,USB Cable,1,60.7
+      SKU-JFWEGG,Laptop Stand,3,132.9
+    subtotal: 528.42
+    tax: 42.27
+    total: 570.69
+    status: cancelled
+    orderDate: 2025-05-15
+  - orderId: ORD-0021
+    customer:
+      id: 1
+      name: Melvin Morar
+      email: heloise_ruecker@yahoo.com
+      phone: 615.593.2955 x964
+    items[1]{sku,name,quantity,price}:
+      SKU-DNRW12,Wireless Mouse,1,76.05
+    subtotal: 76.05
+    tax: 6.08
+    total: 82.13
+    status: pending
+    orderDate: 2025-05-11
+  - orderId: ORD-0022
+    customer:
+      id: 2
+      name: Ebony Hamill
+      email: tasha47@hotmail.com
+      phone: (395) 691-6774 x7303
+    items[1]{sku,name,quantity,price}:
+      SKU-CIBOEO,Wireless Mouse,3,92.92
+    subtotal: 278.76
+    tax: 22.3
+    total: 301.06
+    status: processing
+    orderDate: 2025-05-14
+  - orderId: ORD-0023
+    customer:
+      id: 3
+      name: Norene McDermott
+      email: colleen_lemke96@yahoo.com
+      phone: 673-378-3510 x089
+    items[2]{sku,name,quantity,price}:
+      SKU-GQF54B,Wireless Mouse,5,34.83
+      SKU-K7NZLP,USB Cable,1,143.03
+    subtotal: 317.18
+    tax: 25.37
+    total: 342.55
+    status: shipped
+    orderDate: 2025-05-24
+  - orderId: ORD-0024
+    customer:
+      id: 4
+      name: Mae McDermott
+      email: lowell_bashirian27@yahoo.com
+      phone: 1-764-237-2299 x1616
+    items[2]{sku,name,quantity,price}:
+      SKU-QUZWOU,Wireless Mouse,3,19.89
+      SKU-DIHISR,USB Cable,5,53.3
+    subtotal: 326.17
+    tax: 26.09
+    total: 352.26
+    status: delivered
+    orderDate: 2025-04-18
+  - orderId: ORD-0025
+    customer:
+      id: 5
+      name: Toni Abshire
+      email: isom.breitenberg@yahoo.com
+      phone: 1-798-301-6491 x226
+    items[1]{sku,name,quantity,price}:
+      SKU-BZDGGC,Wireless Mouse,1,46.56
+    subtotal: 46.56
+    tax: 3.72
+    total: 50.28
+    status: cancelled
+    orderDate: 2025-03-26
+  - orderId: ORD-0026
+    customer:
+      id: 6
+      name: Coy Feeney
+      email: rita_harber32@hotmail.com
+      phone: 1-207-400-7233 x69910
+    items[4]{sku,name,quantity,price}:
+      SKU-NY4SRS,Wireless Mouse,4,48.56
+      SKU-Q8ECSK,USB Cable,2,103.01
+      SKU-QFXLIY,Laptop Stand,3,66.3
+      SKU-INMS7R,Keyboard,5,164.83
+    subtotal: 1423.31
+    tax: 113.86
+    total: 1537.17
+    status: pending
+    orderDate: 2025-05-28
+  - orderId: ORD-0027
+    customer:
+      id: 7
+      name: Samantha Ernser
+      email: delpha81@hotmail.com
+      phone: 1-624-327-8332 x7470
+    items[4]{sku,name,quantity,price}:
+      SKU-94U8NY,Wireless Mouse,3,92.53
+      SKU-RRQ6BQ,USB Cable,4,41.18
+      SKU-KOXEZF,Laptop Stand,4,59.42
+      SKU-D9WIYY,Keyboard,4,96.69
+    subtotal: 1066.75
+    tax: 85.34
+    total: 1152.09
+    status: processing
+    orderDate: 2025-03-28
+  - orderId: ORD-0028
+    customer:
+      id: 8
+      name: Stanley Hoppe
+      email: lora48@hotmail.com
+      phone: 1-558-855-9784 x884
+    items[3]{sku,name,quantity,price}:
+      SKU-SQU4LG,Wireless Mouse,5,89.51
+      SKU-UROXHC,USB Cable,4,108.25
+      SKU-WGAJKA,Laptop Stand,3,18.17
+    subtotal: 935.06
+    tax: 74.8
+    total: 1009.86
+    status: shipped
+    orderDate: 2025-04-12
+  - orderId: ORD-0029
+    customer:
+      id: 9
+      name: Owen Labadie PhD
+      email: daija_oreilly49@yahoo.com
+      phone: (740) 332-3813 x4075
+    items[1]{sku,name,quantity,price}:
+      SKU-WTDSZN,Wireless Mouse,3,68.49
+    subtotal: 205.47
+    tax: 16.44
+    total: 221.91
+    status: delivered
+    orderDate: 2025-05-21
+  - orderId: ORD-0030
+    customer:
+      id: 10
+      name: Francesca Cruickshank
+      email: kent8@yahoo.com
+      phone: 1-709-207-2275 x726
+    items[4]{sku,name,quantity,price}:
+      SKU-RYC0BF,Wireless Mouse,3,194.02
+      SKU-YLH3CN,USB Cable,4,131.29
+      SKU-DQ4PE2,Laptop Stand,1,91.32
+      SKU-RPKWJD,Keyboard,1,176.62
+    subtotal: 1375.16
+    tax: 110.01
+    total: 1485.17
+    status: cancelled
+    orderDate: 2025-03-09
+  - orderId: ORD-0031
+    customer:
+      id: 11
+      name: Arturo Goldner
+      email: alonzo58@gmail.com
+      phone: 722.580.8580
+    items[2]{sku,name,quantity,price}:
+      SKU-XRDAWJ,Wireless Mouse,4,77.98
+      SKU-AQJZDB,USB Cable,3,101.27
+    subtotal: 615.73
+    tax: 49.26
+    total: 664.99
+    status: pending
+    orderDate: 2025-04-11
+  - orderId: ORD-0032
+    customer:
+      id: 12
+      name: Ruben McGlynn PhD
+      email: paris_ohara93@gmail.com
+      phone: 1-871-859-0737 x0730
+    items[1]{sku,name,quantity,price}:
+      SKU-MM3KVY,Wireless Mouse,3,120.82
+    subtotal: 362.46
+    tax: 29
+    total: 391.46
+    status: processing
+    orderDate: 2025-03-03
+  - orderId: ORD-0033
+    customer:
+      id: 13
+      name: Marcus Stark-Bergnaum
+      email: emmy_hane29@hotmail.com
+      phone: 744.553.4657 x11645
+    items[3]{sku,name,quantity,price}:
+      SKU-YWADBB,Wireless Mouse,1,99.43
+      SKU-0TEA4C,USB Cable,4,52.56
+      SKU-J6QS1F,Laptop Stand,4,30.04
+    subtotal: 429.83
+    tax: 34.39
+    total: 464.22
+    status: shipped
+    orderDate: 2025-05-16
+  - orderId: ORD-0034
+    customer:
+      id: 14
+      name: Napoleon Skiles MD
+      email: raheem_murray16@hotmail.com
+      phone: 374.370.5882 x62193
+    items[1]{sku,name,quantity,price}:
+      SKU-ODGZQA,Wireless Mouse,1,165.19
+    subtotal: 165.19
+    tax: 13.22
+    total: 178.41
+    status: delivered
+    orderDate: 2025-05-21
+  - orderId: ORD-0035
+    customer:
+      id: 15
+      name: Macy Bashirian
+      email: elissa.keebler55@gmail.com
+      phone: 761.678.4139 x6559
+    items[3]{sku,name,quantity,price}:
+      SKU-XK0GW4,Wireless Mouse,2,47.61
+      SKU-ALFF5F,USB Cable,1,86.3
+      SKU-OJIUZS,Laptop Stand,2,53.89
+    subtotal: 289.3
+    tax: 23.14
+    total: 312.44
+    status: cancelled
+    orderDate: 2025-05-05
+  - orderId: ORD-0036
+    customer:
+      id: 16
+      name: Dr. Margarita Schaden
+      email: clarence.osinski@gmail.com
+      phone: 748.303.0800 x49231
+    items[4]{sku,name,quantity,price}:
+      SKU-UB4TL7,Wireless Mouse,4,56.55
+      SKU-BVVWZE,USB Cable,3,130.04
+      SKU-T5ND1H,Laptop Stand,1,111.5
+      SKU-A6VQHP,Keyboard,1,133.88
+    subtotal: 861.7
+    tax: 68.94
+    total: 930.64
+    status: pending
+    orderDate: 2025-05-29
+  - orderId: ORD-0037
+    customer:
+      id: 17
+      name: Betty O'Kon
+      email: orval_schmitt@yahoo.com
+      phone: 607-372-5596
+    items[4]{sku,name,quantity,price}:
+      SKU-TSXWAN,Wireless Mouse,3,120.79
+      SKU-RVEPM3,USB Cable,4,138.39
+      SKU-JMTLRJ,Laptop Stand,2,72.29
+      SKU-2A4A5Y,Keyboard,2,195.18
+    subtotal: 1450.87
+    tax: 116.07
+    total: 1566.94
+    status: processing
+    orderDate: 2025-04-30
+  - orderId: ORD-0038
+    customer:
+      id: 18
+      name: Daron Marks
+      email: rick25@yahoo.com
+      phone: (331) 706-0714 x4936
+    items[1]{sku,name,quantity,price}:
+      SKU-VLSGSW,Wireless Mouse,1,47.31
+    subtotal: 47.31
+    tax: 3.78
+    total: 51.09
+    status: shipped
+    orderDate: 2025-05-04
+  - orderId: ORD-0039
+    customer:
+      id: 19
+      name: Shelly Nader
+      email: gary.boyer@gmail.com
+      phone: 888-577-8611 x258
+    items[2]{sku,name,quantity,price}:
+      SKU-O2VRVL,Wireless Mouse,3,141.63
+      SKU-LH1W7K,USB Cable,2,111.86
+    subtotal: 648.61
+    tax: 51.89
+    total: 700.5
+    status: delivered
+    orderDate: 2025-05-31
+  - orderId: ORD-0040
+    customer:
+      id: 20
+      name: Alaina Stanton
+      email: maudie59@hotmail.com
+      phone: (812) 967-8159 x45254
+    items[4]{sku,name,quantity,price}:
+      SKU-61BVKM,Wireless Mouse,1,114.41
+      SKU-RB2EIK,USB Cable,1,120.01
+      SKU-ITIXHC,Laptop Stand,3,172.62
+      SKU-L5UIMD,Keyboard,5,72.36
+    subtotal: 1114.08
+    tax: 89.13
+    total: 1203.21
+    status: cancelled
+    orderDate: 2025-04-27
+  - orderId: ORD-0041
+    customer:
+      id: 1
+      name: Elna Rogahn PhD
+      email: hope.osinski@yahoo.com
+      phone: 940-578-9979
+    items[2]{sku,name,quantity,price}:
+      SKU-PRIXJU,Wireless Mouse,3,123
+      SKU-LWFEAJ,USB Cable,2,24.86
+    subtotal: 418.72
+    tax: 33.5
+    total: 452.22
+    status: pending
+    orderDate: 2025-05-06
+  - orderId: ORD-0042
+    customer:
+      id: 2
+      name: Lyle Schiller
+      email: casimer46@yahoo.com
+      phone: 1-999-282-1844 x2945
+    items[3]{sku,name,quantity,price}:
+      SKU-ZKDFLN,Wireless Mouse,5,23.64
+      SKU-ZZYBVO,USB Cable,4,142.37
+      SKU-TTUQX9,Laptop Stand,2,178.01
+    subtotal: 1043.7
+    tax: 83.5
+    total: 1127.2
+    status: processing
+    orderDate: 2025-05-11
+  - orderId: ORD-0043
+    customer:
+      id: 3
+      name: Blaise Bins
+      email: gennaro.reichert@gmail.com
+      phone: (415) 617-4845 x5946
+    items[2]{sku,name,quantity,price}:
+      SKU-HSILNO,Wireless Mouse,3,45.68
+      SKU-UX5HEN,USB Cable,5,112.61
+    subtotal: 700.09
+    tax: 56.01
+    total: 756.1
+    status: shipped
+    orderDate: 2025-05-10
+  - orderId: ORD-0044
+    customer:
+      id: 4
+      name: Antonia Kilback
+      email: vergie_stark22@hotmail.com
+      phone: 736-954-7118 x7286
+    items[2]{sku,name,quantity,price}:
+      SKU-RV6VDY,Wireless Mouse,5,83.96
+      SKU-IC4FCA,USB Cable,1,168.54
+    subtotal: 588.34
+    tax: 47.07
+    total: 635.41
+    status: delivered
+    orderDate: 2025-04-16
+  - orderId: ORD-0045
+    customer:
+      id: 5
+      name: Breanne Ferry
+      email: ebba52@hotmail.com
+      phone: 218-965-8158
+    items[2]{sku,name,quantity,price}:
+      SKU-W2GWXK,Wireless Mouse,2,66.11
+      SKU-VVUTQS,USB Cable,3,93.96
+    subtotal: 414.1
+    tax: 33.13
+    total: 447.23
+    status: cancelled
+    orderDate: 2025-04-11
+  - orderId: ORD-0046
+    customer:
+      id: 6
+      name: Cyril Goyette
+      email: citlalli_damore@yahoo.com
+      phone: 779-573-8239 x221
+    items[4]{sku,name,quantity,price}:
+      SKU-UGWKTA,Wireless Mouse,3,12.58
+      SKU-DUZMP8,USB Cable,1,81.54
+      SKU-7SUXCI,Laptop Stand,3,70.72
+      SKU-MIHTHF,Keyboard,2,54.32
+    subtotal: 440.08
+    tax: 35.21
+    total: 475.29
+    status: pending
+    orderDate: 2025-03-21
+  - orderId: ORD-0047
+    customer:
+      id: 7
+      name: Dee Witting-Ritchie
+      email: jacquelyn.feil2@yahoo.com
+      phone: 1-512-449-3758 x47281
+    items[3]{sku,name,quantity,price}:
+      SKU-2XL0AC,Wireless Mouse,2,38.6
+      SKU-NLB7UE,USB Cable,1,136.92
+      SKU-ZV8E0D,Laptop Stand,1,130.68
+    subtotal: 344.8
+    tax: 27.58
+    total: 372.38
+    status: processing
+    orderDate: 2025-04-07
+  - orderId: ORD-0048
+    customer:
+      id: 8
+      name: Jayden Weimann
+      email: sabrina_muller23@gmail.com
+      phone: (640) 903-9330
+    items[3]{sku,name,quantity,price}:
+      SKU-V9SHLU,Wireless Mouse,2,62.93
+      SKU-SZB6E5,USB Cable,5,115.82
+      SKU-AEC7AU,Laptop Stand,5,59.6
+    subtotal: 1002.96
+    tax: 80.24
+    total: 1083.2
+    status: shipped
+    orderDate: 2025-05-01
+  - orderId: ORD-0049
+    customer:
+      id: 9
+      name: Candice Fisher I
+      email: demarcus_towne@gmail.com
+      phone: 836.928.2746 x402
+    items[3]{sku,name,quantity,price}:
+      SKU-TKS2ZP,Wireless Mouse,4,23.17
+      SKU-JJ4ZXY,USB Cable,1,43.96
+      SKU-LLPEMA,Laptop Stand,1,172.35
+    subtotal: 308.99
+    tax: 24.72
+    total: 333.71
+    status: delivered
+    orderDate: 2025-04-25
+  - orderId: ORD-0050
+    customer:
+      id: 10
+      name: Mr. Willard Douglas
+      email: alexandra34@hotmail.com
+      phone: 574-210-2202
+    items[3]{sku,name,quantity,price}:
+      SKU-9YQHWX,Wireless Mouse,4,90.78
+      SKU-IZEC9R,USB Cable,1,128.91
+      SKU-YLKYXP,Laptop Stand,2,177.31
+    subtotal: 846.65
+    tax: 67.73
+    total: 914.38
+    status: cancelled
+    orderDate: 2025-05-19

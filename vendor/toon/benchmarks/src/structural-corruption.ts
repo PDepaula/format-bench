@@ -1,5 +1,6 @@
 import type { Format } from './formats.ts'
 import type { Dataset, StructuralCorruption } from './types.ts'
+import { encodeEdnMaps, encodeTable } from './edn.ts'
 import { FORMATS } from './formats.ts'
 
 /**
@@ -289,6 +290,48 @@ export function corruptEncodedText(
   }
 }
 
+const EDN_TABLE_FORMATS = new Set(['edn-table', 'edn-table-primer'])
+
+/**
+ * Applies a structural corruption to the EDN encodings.
+ *
+ * @remarks
+ * `edn-maps` is a single line like compact JSON, so it gets the same
+ * parsed-object surgery as `json-compact`. The EDN table form mirrors TOON/CSV
+ * rows: trailing rows are dropped or appended, and width/missing-field
+ * corruption drops the targeted cell so the row is narrower than `:cols`.
+ * EDN carries no declared length, so truncation and extra rows stay valid.
+ */
+export function corruptEdn(formatName: string, data: Record<string, any>, corruption: StructuralCorruption): string {
+  const employees = data.employees as Record<string, any>[]
+
+  if (!EDN_TABLE_FORMATS.has(formatName))
+    return encodeEdnMaps(JSON.parse(corruptJsonCompactText(JSON.stringify(data), corruption)))
+
+  const cols = Object.keys(employees[0]!)
+  let rows = employees.map(e => cols.map(c => e[c]))
+
+  switch (corruption.kind) {
+    case 'control':
+      break
+    case 'truncated':
+      rows = rows.slice(0, rows.length - corruption.removeRecordCount)
+      break
+    case 'extra-rows':
+      rows = [...rows, ...corruption.appendRecords.map(e => cols.map(c => e[c] as any))]
+      break
+    case 'width-mismatch':
+    case 'missing-fields': {
+      const fieldIndex = cols.indexOf(corruption.targetFieldName)
+      const targets = new Set(corruption.targetRecordIndices)
+      rows = rows.map((row, i) => targets.has(i) ? row.filter((_, j) => j !== fieldIndex) : row)
+      break
+    }
+  }
+
+  return `{:employees ${encodeTable(cols, rows)}}`
+}
+
 /**
  * Encodes a dataset, applying post-encode text corruption when one is declared.
  *
@@ -297,6 +340,9 @@ export function corruptEncodedText(
  * model prompts see the same corrupted text.
  */
 export function encodeDataset(format: Format, dataset: Dataset): string {
+  if (dataset.corruption && format.fence === 'edn')
+    return corruptEdn(format.name, dataset.data, dataset.corruption)
+
   const text = format.encode(dataset.data)
 
   return dataset.corruption
