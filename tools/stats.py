@@ -52,10 +52,11 @@ def holm(pvals):
 
 
 def verdict(lo, hi):
+    inside = lo >= -MARGIN and hi <= MARGIN
     if lo > 0:
-        return "A better"
+        return "A better (within ±5pp)" if inside else "A better"
     if hi < 0:
-        return "B better"
+        return "B better (within ±5pp)" if inside else "B better"
     if lo >= -MARGIN and hi <= MARGIN:
         return "equivalent (±5pp)"
     return "no detectable difference"
@@ -66,12 +67,19 @@ def main():
     ap.add_argument("--lenient", action="store_true")
     ap.add_argument("--graded", default=str(ROOT / "results/accuracy/graded.csv"))
     ap.add_argument("--suffix", default="")
+    ap.add_argument("--exclude-toolcall-batches", action="store_true",
+                    help="sensitivity: drop (model, batch) pairs where any format's reply contained a fake tool call")
     args = ap.parse_args()
     col = "correct_lenient" if args.lenient else "correct"
     suffix = args.suffix or ("_lenient" if args.lenient else "")
     OUT.mkdir(parents=True, exist_ok=True)
 
     rows = list(csv.DictReader(open(args.graded)))
+    if args.exclude_toolcall_batches:
+        bad = {(r["model"], r["batch_id"]) for r in rows if r.get("fake_tool_call") == "1"}
+        bad_q = {(r["model"], r["seed"], r["question_id"]) for r in rows if (r["model"], r["batch_id"]) in bad}
+        rows = [r for r in rows if (r["model"], r["seed"], r["question_id"]) not in bad_q]
+        print(f"excluded {len(bad)} (model, batch) pairs")
     qmeta = {}
     # score[(model, format)][qid] -> list of 0/1 over seeds
     score = defaultdict(lambda: defaultdict(list))
@@ -117,7 +125,10 @@ def main():
                     if not qids:
                         continue
                     s = qscore(model, fmt, qids)
-                    if np.isnan(s).any():
+                    keep = ~np.isnan(s)
+                    qids = [q for q, k in zip(qids, keep) if k]
+                    s = s[keep]
+                    if not len(s):
                         continue
                     idx = rng.integers(0, len(s), size=(B, len(s)))
                     boots = s[idx].mean(axis=1)
@@ -140,7 +151,10 @@ def main():
                 if not qids:
                     continue
                 sa, sb = qscore(model, a, qids), qscore(model, b, qids)
-                if np.isnan(sa).any() or np.isnan(sb).any():
+                keep = ~np.isnan(sa) & ~np.isnan(sb)
+                qids = [q for q, k in zip(qids, keep) if k]
+                sa, sb = sa[keep], sb[keep]
+                if not len(qids):
                     continue
                 d = sa - sb
                 idx = rng.integers(0, len(d), size=(B, len(d)))

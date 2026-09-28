@@ -1,0 +1,4 @@
+format,n_questions,upstream_single_question,ours_batched_mean3seeds,per_question_agreement_majority
+json-compact,244,0.6189,0.6107,0.9344
+toon,244,0.6557,0.6462,0.9508
+csv,109,0.4954,0.5138,0.9908

@@ -38,3 +38,18 @@ its content: environment `<system-reminder>` blocks (working directory,
 scratchpad path, proxy note, model id and knowledge cutoff, date, user e-mail,
 git attribution text). It is identical for every format and cannot be removed
 without an API key (`--bare` requires `ANTHROPIC_API_KEY`).
+
+## D5 (2026-09-28, before the main accuracy runs) — effort pinned to low; Opus 5.5 thinks anyway
+
+The parent session exports `CLAUDE_EFFORT=high`, which the subagents
+inherited. Haiku 4.5 and Sonnet 5 produced 0 thinking tokens with
+`MAX_THINKING_TOKENS=0`, but Opus 5.5 used adaptive extended thinking
+(~400–1,300 thinking tokens per batch) under every CLI control tried:
+`MAX_THINKING_TOKENS=0`, `--settings '{"alwaysThinkingEnabled":false}'`,
+`CLAUDE_CODE_DISABLE_THINKING=1`, `--effort low` (lowest, still ~750).
+Change: `--effort low` and `CLAUDE_EFFORT=low` for every model. Consequence:
+Opus results are *with hidden reasoning* and are not comparable to upstream's
+`reasoning: 'none'` numbers; within-Opus format comparisons stay paired and
+fair (same settings for all formats). Opus thinking tokens are reported per
+format as a secondary "reading effort" measure. The partial runs made before
+this change (`results/raw/pilot/*-pilot-effort-high.jsonl`) are excluded.

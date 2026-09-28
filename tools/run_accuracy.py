@@ -1,6 +1,6 @@
-"""Runs the accuracy manifest through headless Claude Code subagents.
+"""Runs a task manifest through headless Claude Code subagents.
 
-Usage: python3 tools/run_accuracy.py <haiku|sonnet|opus> [workers]
+Usage: python3 tools/run_accuracy.py <haiku|sonnet|opus> [workers] [accuracy|generation]
 Appends one JSON line per task to results/raw/accuracy/<model>.jsonl (resumable:
 tasks with an ok result are skipped)."""
 import json
@@ -16,10 +16,11 @@ import claude_cli  # noqa: E402
 ROOT = Path(__file__).resolve().parent.parent
 model = sys.argv[1]
 workers = int(sys.argv[2]) if len(sys.argv) > 2 else 8
-out_path = ROOT / "results" / "raw" / "accuracy" / f"{model}.jsonl"
+kind = sys.argv[3] if len(sys.argv) > 3 else "accuracy"
+out_path = ROOT / "results" / "raw" / kind / f"{model}.jsonl"
 out_path.parent.mkdir(parents=True, exist_ok=True)
 
-tasks = [json.loads(l) for l in (ROOT / "results/accuracy/tasks.jsonl").open()]
+tasks = [json.loads(l) for l in (ROOT / "results" / kind / "tasks.jsonl").open()]
 done = set()
 if out_path.exists():
     for line in out_path.read_text().splitlines():
@@ -35,7 +36,7 @@ lock = threading.Lock()
 
 def run(t):
     r = claude_cli.call(model, t["prompt"])
-    rec = {k: t[k] for k in ("task_id", "seed", "batch_id", "dataset", "format", "question_ids")}
+    rec = {k: v for k, v in t.items() if k != "prompt"}
     rec.update(model=model, **r)
     return rec
 

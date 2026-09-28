@@ -73,7 +73,7 @@ function csvCell(value: unknown): string {
 const questions = new Map<string, Question>(generateQuestions().map(q => [q.id, q]))
 const datasetTrack = new Map(ACCURACY_DATASETS.map(d => [d.name, d.metadata.supportsCSV ? 'flat' : 'mixed']))
 
-const header = ['model', 'served_model', 'seed', 'batch_id', 'format', 'dataset', 'track', 'shape', 'question_id', 'type', 'answer_type', 'position', 'batch_size', 'expected', 'answer', 'parsed', 'correct', 'correct_lenient', 'error_class', 'verbose']
+const header = ['model', 'served_model', 'seed', 'batch_id', 'format', 'dataset', 'track', 'shape', 'question_id', 'type', 'answer_type', 'position', 'batch_size', 'expected', 'answer', 'parsed', 'correct', 'correct_lenient', 'error_class', 'verbose', 'extra_lines', 'output_tokens', 'thinking_tokens', 'input_total', 'fake_tool_call']
 const rows: string[] = [header.join(',')]
 const stats: Record<string, number> = {}
 
@@ -88,6 +88,8 @@ for (const file of fs.readdirSync(RAW_DIR).filter(f => f.endsWith('.jsonl')).sor
 
   for (const rec of latest.values()) {
     const answers = rec.ok ? parseAnswers(rec.text) : new Map<number, string>()
+    // Non-empty reply lines that are not answer lines: a proxy for visible reasoning/preamble.
+    const extraLines = rec.ok ? rec.text.split('\n').filter((l: string) => l.trim() && !ANSWER_LINE.test(l)).length : 0
     rec.question_ids.forEach((qid: string, i: number) => {
       const q = questions.get(qid)!
       const type = (q.answerType ?? 'string') as AnswerType
@@ -119,6 +121,11 @@ for (const file of fs.readdirSync(RAW_DIR).filter(f => f.endsWith('.jsonl')).sor
         correctLenient ? 1 : 0,
         errorClass,
         verbose ? 1 : 0,
+        extraLines,
+        rec.output_tokens ?? '',
+        rec.thinking_tokens ?? '',
+        rec.input_total ?? '',
+        rec.ok && /<function_calls>|<invoke name=/.test(rec.text) ? 1 : 0,
       ].map(csvCell).join(','))
     })
   }

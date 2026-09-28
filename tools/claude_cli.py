@@ -17,8 +17,11 @@ BASE_ARGS = [
     "--disable-slash-commands",
     "--no-session-persistence",
     "--output-format", "json",
+    "--effort", "low",
 ]
-ENV = dict(os.environ, MAX_THINKING_TOKENS="0", DISABLE_PROMPT_CACHING="1")
+# The parent session exports CLAUDE_EFFORT=high; pin the lowest effort for every model
+# (Opus 5.5 still uses adaptive thinking that the CLI cannot switch off; see DEVIATIONS D5).
+ENV = dict(os.environ, MAX_THINKING_TOKENS="0", DISABLE_PROMPT_CACHING="1", CLAUDE_EFFORT="low")
 
 
 def call(model: str, prompt: str, retries: int = 3, timeout: int = 600) -> dict:
