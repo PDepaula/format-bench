@@ -20,6 +20,8 @@ export interface EdnOptions {
   rowSeparator?: string
   /** Separator between the elements of the top-level map's array values (layout confound check only). */
   topLevelArraySeparator?: string
+  /** Separator between the entries of the top-level map's map values (layout confound check only). */
+  topLevelMapSeparator?: string
 }
 
 type Primitive = string | number | boolean | null
@@ -136,7 +138,8 @@ function encodeValue(value: unknown, options: EdnOptions, depth: number): string
     if (keys.length === 2 && keys.includes('cols') && keys.includes('rows'))
       throw new Error('EDN encoder: source map with exactly the keys cols/rows would be ambiguous with the table form')
     const entries = keys.map(k => `${encodeKey(k)} ${encodeValue(value[k], options, depth + 1)}`)
-    return `{${entries.join(' ')}}`
+    const separator = depth === 1 && options.topLevelMapSeparator ? options.topLevelMapSeparator : ' '
+    return `{${entries.join(separator)}}`
   }
 
   throw new Error(`EDN encoder: unsupported value ${String(value)}`)
@@ -148,6 +151,8 @@ export function encodeEdn(data: unknown, options: EdnOptions): string {
 
 export const encodeEdnMaps = (data: unknown): string => encodeEdn(data, { tables: false })
 export const encodeEdnTable = (data: unknown): string => encodeEdn(data, { tables: true })
+/** Post-hoc layout variant (DEVIATIONS D6): EDN-table with one top-level record / map entry per line. */
+export const encodeEdnTableLines = (data: unknown): string => encodeEdn(data, { tables: true, topLevelArraySeparator: '\n', topLevelMapSeparator: '\n' })
 
 /** Short primer shared by `edn-maps` and `edn-table` (the no-primer condition). */
 export const EDN_SHORT_PRIMER = 'EDN: Clojure data notation. Maps {:key value}, vectors [a b c], keyword keys (:name), nil for null.'

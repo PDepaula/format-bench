@@ -3,7 +3,7 @@ import { stringify as stringifyCSV } from 'csv-stringify/sync'
 import { XMLBuilder } from 'fast-xml-parser'
 import { stringify as stringifyYAML } from 'yaml'
 import { encode as encodeToon } from '../../packages/toon/src/index.ts'
-import { EDN_LONG_PRIMER, EDN_SHORT_PRIMER, encodeEdnMaps, encodeEdnTable } from './edn.ts'
+import { EDN_LONG_PRIMER, EDN_SHORT_PRIMER, encodeEdnMaps, encodeEdnTable, encodeEdnTableLines } from './edn.ts'
 
 /** Everything a caller must know about one data format, defined in one place. */
 export interface Format {
@@ -93,6 +93,16 @@ export const FORMATS: Record<string, Format> = {
     primer: EDN_LONG_PRIMER,
     fence: 'edn',
     displayName: 'EDN table + primer',
+    promptName: 'edn-table',
+  },
+  // Post-hoc layout-confound check (DEVIATIONS D6): same content as `edn-table`,
+  // one top-level record / map entry per line, like TOON's one-record-per-line layout.
+  'edn-table-lines': {
+    name: 'edn-table-lines',
+    encode: data => encodeEdnTableLines(data),
+    primer: EDN_SHORT_PRIMER,
+    fence: 'edn',
+    displayName: 'EDN table (line-broken)',
     promptName: 'edn-table',
   },
 }

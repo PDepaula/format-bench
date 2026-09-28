@@ -34,7 +34,14 @@ for rep in range(3):
     jobs.append(("baseline", "-", "-", rep, PREFIX))
 for fmt, text in ENC["primers"].items():
     jobs.append(("primer", "-", fmt, 0, PREFIX + "\n" + text))
-for g in groups:
+if "breakeven" in groups:
+    # post-review addition: Claude counts for the primer break-even series (n <= 100)
+    for fam, sizes in ENC["breakeven"].items():
+        for n, fmts in sizes.items():
+            if int(n) <= 100:
+                for fmt in ("json-compact", "toon", "edn-table"):
+                    jobs.append((f"breakeven:{fam}", n, fmt, 0, PREFIX + "\n" + fmts[fmt]))
+for g in [g for g in groups if g != "breakeven"]:
     for ds, fmts in ENC[g].items():
         for fmt in CONTENDERS:
             if fmt in fmts:

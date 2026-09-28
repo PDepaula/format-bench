@@ -5,7 +5,7 @@ import { decode as decodeToon } from '../../packages/toon/src/index.ts'
 import { BENCHMARKS_DIR } from '../src/constants.ts'
 import { ACCURACY_DATASETS, TOKEN_EFFICIENCY_DATASETS } from '../src/datasets.ts'
 import { decodeEdn } from '../src/edn-decode.ts'
-import { encodeEdn, encodeEdnMaps, encodeEdnTable, isKeywordSafe, isTabular } from '../src/edn.ts'
+import { encodeEdn, encodeEdnMaps, encodeEdnTable, encodeEdnTableLines, isKeywordSafe, isTabular } from '../src/edn.ts'
 import { FORMATS } from '../src/formats.ts'
 import { encodeDataset } from '../src/structural-corruption.ts'
 
@@ -40,6 +40,7 @@ describe('EDN encoders are lossless (edn-data parser)', () => {
     it(`layout variants round-trip ${name}`, () => {
       expectIdentical(decodeEdn(encodeEdn(data, { tables: true, rowSeparator: ' ' }), { expandTables: true }), data)
       expectIdentical(decodeEdn(encodeEdn(data, { tables: false, topLevelArraySeparator: '\n' }), { expandTables: false }), data)
+      expectIdentical(decodeEdn(encodeEdnTableLines(data), { expandTables: true }), data)
     })
 
     it(`toon round-trips ${name}`, () => {

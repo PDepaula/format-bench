@@ -18,7 +18,8 @@ import { compareAnswers } from '../src/normalize.ts'
 import { generateQuestions } from '../src/questions/index.ts'
 
 const REPO_ROOT = path.join(BENCHMARKS_DIR, '..', '..', '..')
-const RAW_DIR = path.join(REPO_ROOT, 'results', 'raw', 'accuracy')
+// accuracy_layout holds the post-hoc edn-table-lines runs (DEVIATIONS D6)
+const RAW_DIRS = ['accuracy', 'accuracy_layout'].map(d => path.join(REPO_ROOT, 'results', 'raw', d)).filter(d => fs.existsSync(d))
 
 export const SHAPES: Record<string, string> = {
   'tabular': 'uniform-tables',
@@ -77,9 +78,9 @@ const header = ['model', 'served_model', 'seed', 'batch_id', 'format', 'dataset'
 const rows: string[] = [header.join(',')]
 const stats: Record<string, number> = {}
 
-for (const file of fs.readdirSync(RAW_DIR).filter(f => f.endsWith('.jsonl')).sort()) {
+for (const file of RAW_DIRS.flatMap(d => fs.readdirSync(d).filter(f => f.endsWith('.jsonl')).sort().map(f => path.join(d, f)))) {
   const latest = new Map<string, any>()
-  for (const line of fs.readFileSync(path.join(RAW_DIR, file), 'utf8').split('\n').filter(Boolean)) {
+  for (const line of fs.readFileSync(file, 'utf8').split('\n').filter(Boolean)) {
     const rec = JSON.parse(line)
     // keep the last ok record per task (a failed attempt is superseded by a later success)
     if (rec.ok || !latest.has(rec.task_id))

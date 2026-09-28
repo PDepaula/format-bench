@@ -24,7 +24,9 @@ blocks = {
     ]),
     "ACCURACY_TABLES": section(tables, "**All 244 questions", "**Failure classification"),
     "GENERATION": section(tables, "**Generation check**", "**External check"),
-    "BREAKEVEN": section(tokens, "#### Primer break-even"),
+    "BREAKEVEN": (A / "breakeven_interp.md").read_text().strip()
+    + "\n\n<details><summary>Grid-point version (o200k / Qwen3, n up to 2000; first grid n at or past the crossing)</summary>\n\n"
+    + section(tokens, "#### Primer break-even") + "\n\n</details>",
     "FAILURES": section(tables, "**Failure classification", "**Generation check**").replace("**Reply behaviour", "\n**Reply behaviour"),
 }
 report = (ROOT / "REPORT.md").read_text()

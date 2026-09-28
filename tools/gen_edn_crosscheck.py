@@ -12,7 +12,7 @@ blocks = json.loads((ROOT / "results/generation/extracted_blocks.json").read_tex
 path = ROOT / "results/generation/graded.csv"
 rows = list(csv.DictReader(path.open()))
 for r in rows:
-    if r["format"] == "toon":
+    if r["format"].startswith("toon"):
         r["parse_valid_edn_format"] = ""
         continue
     try:
@@ -24,5 +24,5 @@ with path.open("w", newline="") as f:
     w = csv.DictWriter(f, fieldnames=list(rows[0]))
     w.writeheader()
     w.writerows(rows)
-dis = [(r["model"], r["task_id"], r["parse_valid"], r["parse_valid_edn_format"]) for r in rows if r["format"] != "toon" and r["parse_valid"] != r["parse_valid_edn_format"]]
+dis = [(r["model"], r["task_id"], r["parse_valid"], r["parse_valid_edn_format"]) for r in rows if not r["format"].startswith("toon") and r["parse_valid"] != r["parse_valid_edn_format"]]
 print("edn-data vs edn_format disagreements:", dis)

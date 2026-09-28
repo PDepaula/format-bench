@@ -8,6 +8,7 @@
  */
 import * as fs from 'node:fs'
 import * as path from 'node:path'
+import process from 'node:process'
 import { BENCHMARKS_DIR } from '../src/constants.ts'
 import { ACCURACY_DATASETS } from '../src/datasets.ts'
 import { buildBatchPrompt } from '../src/evaluate.ts'
@@ -16,10 +17,13 @@ import { generateQuestions } from '../src/questions/index.ts'
 import { encodeDataset } from '../src/structural-corruption.ts'
 
 const REPO_ROOT = path.join(BENCHMARKS_DIR, '..', '..', '..')
-const OUT_DIR = path.join(REPO_ROOT, 'results', 'accuracy')
+// `node scripts/edn-make-tasks.ts layout` builds the post-hoc layout-confound
+// manifest (DEVIATIONS D6): edn-table-lines on the mixed-track batches only.
+const LAYOUT = process.argv[2] === 'layout'
+const OUT_DIR = path.join(REPO_ROOT, 'results', LAYOUT ? 'accuracy_layout' : 'accuracy')
 const SEEDS = [1, 2, 3]
 const BATCH_MAX = 10
-const STUDY_FORMATS = ['json-compact', 'toon', 'edn-maps', 'edn-table', 'edn-table-primer', 'csv']
+const STUDY_FORMATS = LAYOUT ? ['edn-table-lines'] : ['json-compact', 'toon', 'edn-maps', 'edn-table', 'edn-table-primer', 'csv']
 
 export function mulberry32(seed: number): () => number {
   let a = seed >>> 0
@@ -79,6 +83,8 @@ for (const seed of SEEDS) {
       const dataset = ACCURACY_DATASETS.find(d => d.name === dsName)!
       for (const fmt of STUDY_FORMATS) {
         if (fmt === 'csv' && !supportsCSV(dataset))
+          continue
+        if (LAYOUT && supportsCSV(dataset))
           continue
         const format = FORMATS[fmt]!
         const data = encodeDataset(format, dataset)

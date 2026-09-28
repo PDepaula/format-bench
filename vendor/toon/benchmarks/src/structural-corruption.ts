@@ -290,7 +290,7 @@ export function corruptEncodedText(
   }
 }
 
-const EDN_TABLE_FORMATS = new Set(['edn-table', 'edn-table-primer'])
+const EDN_TABLE_FORMATS = new Set(['edn-table', 'edn-table-primer', 'edn-table-lines'])
 
 /**
  * Applies a structural corruption to the EDN encodings.
