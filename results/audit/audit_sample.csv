@@ -1,0 +1,181 @@
+audit_id,format,model,seed,question_id,answer_type,question,expected,answer,graded_correct,error_class
+json-compact-0,json-compact,opus,2,q19,integer,How many employees are in the dataset?,100,100,1,
+json-compact-1,json-compact,sonnet,3,q58,number,What is the highest order total?,1754.91,1754.91,1,
+json-compact-2,json-compact,sonnet,3,q54,integer,"How many orders have status ""shipped""?",10,10,1,
+json-compact-3,json-compact,sonnet,3,q208,string,What country does Mrs. Ladarius Wilkinson live in?,Thailand,Thailand,1,
+json-compact-4,json-compact,opus,3,q122,integer,How many repositories have more than 100000 stars and more than 7000 watchers?,6,6,1,
+json-compact-5,json-compact,opus,3,q18,integer,How many employees have a salary greater than 100000?,52,52,1,
+json-compact-6,json-compact,haiku,1,q205,integer,What is the price of Mae Kirlin-Christiansen's plan?,0,0,1,
+json-compact-7,json-compact,sonnet,2,q85,integer,How many days had more than 6000 views?,20,24,0,comprehension
+json-compact-8,json-compact,opus,3,q241,boolean,Is this data complete and valid? Answer only YES or NO.,NO,YES,0,comprehension
+json-compact-9,json-compact,haiku,1,q91,integer,How many days had revenue greater than 2000 with views above 6000?,17,20,0,comprehension
+json-compact-10,json-compact,haiku,2,q214,string,What country does the last contact in the dataset live in?,Namibia,Namibia,1,
+json-compact-11,json-compact,haiku,3,q41,string,What is the status of order ORD-0011?,pending,pending,1,
+json-compact-12,json-compact,opus,3,q161,integer,How many roles are defined in permissions?,3,3,1,
+json-compact-13,json-compact,haiku,1,q100,integer,How many stars does ohmyzsh/ohmyzsh have?,188762,188762,1,
+json-compact-14,json-compact,haiku,3,q69,integer,How many orders have a total greater than 300 and at least 3 items?,25,38,0,comprehension
+json-compact-15,json-compact,opus,1,q179,integer,How many roles have at least 5 permissions?,1,1,1,
+json-compact-16,json-compact,opus,2,q57,integer,How many orders are in the dataset?,50,50,1,
+json-compact-17,json-compact,opus,2,q67,integer,"How many orders have status ""processing"" and at least 3 items?",7,7,1,
+json-compact-18,json-compact,haiku,2,q115,integer,How many repositories have more than 200000 stars?,22,25,0,comprehension
+json-compact-19,json-compact,opus,2,q145,integer,"How many log entries have level ""error"" and status code >= 400?",26,26,1,
+json-compact-20,json-compact,opus,3,q116,integer,How many repositories have more than 20000 forks?,57,56,0,comprehension
+json-compact-21,json-compact,sonnet,3,q119,integer,How many repositories have more than 75000 stars and more than 15000 forks?,72,52,0,comprehension
+json-compact-22,json-compact,haiku,1,q56,number,What is the average order value?,738.20,822.41,0,comprehension
+json-compact-23,json-compact,sonnet,1,q52,integer,"How many orders have status ""pending""?",10,10,1,
+json-compact-24,json-compact,haiku,3,q20,integer,What is the average salary across all employees?,102543,108015,0,comprehension
+json-compact-25,json-compact,opus,3,q232,integer,How many repositories are in the dataset?,100,100,1,
+json-compact-26,json-compact,haiku,3,q153,integer,What is the database port?,5432,5432,1,
+json-compact-27,json-compact,sonnet,2,q121,integer,How many repositories have more than 150000 stars and more than 30000 forks?,31,32,0,comprehension
+json-compact-28,json-compact,haiku,3,q199,string,What plan is Milan Kreiger on?,starter,starter,1,
+json-compact-29,json-compact,opus,3,q206,integer,How old is Monica Botsford?,42,42,1,
+toon-30,toon,sonnet,2,q206,integer,How old is Monica Botsford?,42,42,1,
+toon-31,toon,haiku,2,q80,integer,How many days of data are in the dataset?,60,60,1,
+toon-32,toon,sonnet,2,q177,integer,How many database replicas have priority greater than 2 and port 5432?,1,1,1,
+toon-33,toon,haiku,3,q244,boolean,Is this data complete and valid? Answer only YES or NO.,NO,NO,1,
+toon-34,toon,haiku,1,q97,integer,How many forks does donnemartin/system-design-primer have?,57365,57365,1,
+toon-35,toon,sonnet,2,q239,string,What is the level of the last log entry in the dataset?,info,info,1,
+toon-36,toon,opus,1,q20,integer,What is the average salary across all employees?,102543,102543.19,1,
+toon-37,toon,opus,1,q227,integer,How many metric records are in the dataset?,60,60,1,
+toon-38,toon,sonnet,2,q102,integer,How many watchers does twbs/bootstrap have?,6623,6623,1,
+toon-39,toon,haiku,1,q169,integer,What is the total number of permissions across all roles?,8,8,1,
+toon-40,toon,sonnet,2,q54,integer,"How many orders have status ""shipped""?",10,10,1,
+toon-41,toon,haiku,3,q105,integer,How many forks does microsoft/PowerToys have?,8303,8303,1,
+toon-42,toon,sonnet,3,q33,integer,How many employees in Marketing have more than 10 years of experience?,10,15,0,comprehension
+toon-43,toon,haiku,2,q77,number,What is the bounce rate for 2025-01-19?,0.6,0.6,1,
+toon-44,toon,sonnet,3,q210,csv-list-ordered,"List the top-level field names for contacts (comma-separated, in order).","name,age,email,address,plan","name,age,email,address,plan",1,
+toon-45,toon,opus,3,q100,integer,How many stars does ohmyzsh/ohmyzsh have?,188762,188762,1,
+toon-46,toon,opus,1,q169,integer,What is the total number of permissions across all roles?,8,8,1,
+toon-47,toon,opus,3,q48,string,What is the customer name for order ORD-0010?,Mr. Sidney Nikolaus,Mr. Sidney Nikolaus,1,
+toon-48,toon,haiku,2,q72,number,What is the revenue for 2025-01-04?,812.11,812.11,1,
+toon-49,toon,haiku,2,q219,string,What is the name of the last employee in the dataset?,Aaron Vandervort,Aaron Vandervort,1,
+toon-50,toon,haiku,3,q129,string,What is the endpoint for the log at 2025-05-30T01:38:15.989Z?,/api/orders,/api/orders,1,
+toon-51,toon,haiku,3,q89,integer,How many days had revenue greater than 1000 with views above 6000?,20,17,0,comprehension
+toon-52,toon,haiku,1,q95,integer,How many days had revenue greater than 1500 with bounce rate below 0.5?,24,27,0,comprehension
+toon-53,toon,sonnet,1,q101,integer,How many forks does mattpocock/skills have?,15773,1041,0,comprehension
+toon-54,toon,opus,1,q190,string,Who owns flag `flag_30_junior`?,Donald,Donald,1,
+toon-55,toon,opus,1,q117,integer,How many repositories have more than 35000 forks?,29,29,1,
+toon-56,toon,haiku,3,q121,integer,How many repositories have more than 150000 stars and more than 30000 forks?,31,16,0,comprehension
+toon-57,toon,haiku,3,q43,string,What is the status of order ORD-0015?,cancelled,cancelled,1,
+toon-58,toon,haiku,3,q212,csv-list-ordered,"What are the field names within a contact's plan (comma-separated, in order)?","name,price","name,price",1,
+toon-59,toon,sonnet,2,q189,integer,What is the rollout percentage of flag `flag_27_steak`?,80,80,1,
+edn-maps-60,edn-maps,sonnet,1,q112,integer,"How many repositories use ""main"" as their default branch?",49,62,0,comprehension
+edn-maps-61,edn-maps,haiku,3,q132,string,What is the level of the log at 2025-05-28T17:23:43.108Z?,info,info,1,
+edn-maps-62,edn-maps,sonnet,1,q213,string,What is the 3rd top-level field name for contacts?,email,email,1,
+edn-maps-63,edn-maps,sonnet,2,q9,integer,How many years of experience does Cody Bogisich have?,11,11,1,
+edn-maps-64,edn-maps,sonnet,2,q88,integer,How many days had more than 7000 views and more than 15 conversions?,10,2,0,comprehension
+edn-maps-65,edn-maps,sonnet,3,q112,integer,"How many repositories use ""main"" as their default branch?",49,60,0,comprehension
+edn-maps-66,edn-maps,sonnet,1,q25,integer,How many employees in Marketing have a salary greater than 80000?,12,12,1,
+edn-maps-67,edn-maps,opus,3,q106,integer,How many watchers does krahets/hello-algo have?,646,646,1,
+edn-maps-68,edn-maps,opus,1,q103,string,What is the main branch of jlevy/the-art-of-command-line?,master,master,1,
+edn-maps-69,edn-maps,sonnet,3,q144,integer,"How many log entries have level ""warn"" and status code >= 400?",6,6,1,
+edn-maps-70,edn-maps,haiku,2,q188,boolean,Is flag `flag_24_understanding` enabled?,yes,true,1,
+edn-maps-71,edn-maps,haiku,2,q194,string,What is the 2nd field name for each flag?,rollout,rollout,1,
+edn-maps-72,edn-maps,sonnet,3,q213,string,What is the 3rd top-level field name for contacts?,email,email,1,
+edn-maps-73,edn-maps,opus,3,q11,integer,What is the salary of Jerald Murray?,67666,67666,1,
+edn-maps-74,edn-maps,sonnet,2,q39,string,What is the status of order ORD-0007?,processing,processing,1,
+edn-maps-75,edn-maps,sonnet,2,q138,integer,"How many log entries have level ""error""?",26,34,0,comprehension
+edn-maps-76,edn-maps,haiku,3,q171,integer,What is the total number of variants across all feature flags?,3,3,1,
+edn-maps-77,edn-maps,opus,2,q49,string,What is the customer email for order ORD-0012?,elmo_bernier@gmail.com,elmo_bernier@gmail.com,1,
+edn-maps-78,edn-maps,sonnet,2,q28,integer,How many active employees have more than 5 years of experience?,60,76,0,comprehension
+edn-maps-79,edn-maps,sonnet,1,q240,boolean,Is this data complete and valid? Answer only YES or NO.,YES,YES,1,
+edn-maps-80,edn-maps,haiku,2,q160,string,What is the version in the configuration?,0.2.20,0.2.20,1,
+edn-maps-81,edn-maps,opus,2,q2,string,What department does Darnell Koss work in?,Marketing,Marketing,1,
+edn-maps-82,edn-maps,sonnet,2,q54,integer,"How many orders have status ""shipped""?",10,8,0,comprehension
+edn-maps-83,edn-maps,sonnet,1,q32,integer,How many employees in Sales have more than 10 years of experience?,8,6,0,comprehension
+edn-maps-84,edn-maps,sonnet,2,q79,integer,What are the views for 2025-01-25?,5993,5993,1,
+edn-maps-85,edn-maps,sonnet,2,q4,integer,How many years of experience does Austin Morissette III have?,13,13,1,
+edn-maps-86,edn-maps,haiku,2,q68,integer,"How many orders have status ""shipped"" and at least 3 items?",5,2,0,comprehension
+edn-maps-87,edn-maps,haiku,2,q197,string,What city is Halie Maggio's address in?,Carlochester,Carlochester,1,
+edn-maps-88,edn-maps,opus,2,q228,csv-list-ordered,"List the field names for metrics (comma-separated, in order).","date,views,clicks,conversions,revenue,bounceRate","date,views,clicks,conversions,revenue,bounceRate",1,
+edn-maps-89,edn-maps,haiku,3,q178,integer,How many authentication providers have more than 2 scopes?,1,1,1,
+edn-table-90,edn-table,opus,3,q170,integer,How many distinct permissions are defined across all roles?,5,5,1,
+edn-table-91,edn-table,opus,1,q148,integer,"How many log entries are for endpoint ""/api/orders"" with status code >= 500?",6,6,1,
+edn-table-92,edn-table,opus,2,q238,csv-list-unordered,"List the field names for log entries (comma-separated, any order, including optional fields).","timestamp,level,endpoint,statusCode,responseTime,userId,error","timestamp,level,endpoint,statusCode,responseTime,userId,error",1,
+edn-table-93,edn-table,sonnet,1,q201,integer,How old is Miss Thora Heathcote-Schumm?,78,78,1,
+edn-table-94,edn-table,haiku,2,q75,integer,What are the views for 2025-01-13?,5611,5611,1,
+edn-table-95,edn-table,sonnet,2,q85,integer,How many days had more than 6000 views?,20,22,0,comprehension
+edn-table-96,edn-table,haiku,1,q109,integer,What is the total number of forks across all repositories?,2909646,4272857,0,comprehension
+edn-table-97,edn-table,haiku,3,q217,string,What is the 3rd field name for employees?,email,email,1,
+edn-table-98,edn-table,sonnet,2,q237,integer,How many log entries are in the dataset?,75,69,0,comprehension
+edn-table-99,edn-table,haiku,1,q75,integer,What are the views for 2025-01-13?,5611,5611,1,
+edn-table-100,edn-table,opus,3,q12,string,What department does Madelyn Torphy work in?,Operations,Operations,1,
+edn-table-101,edn-table,haiku,2,q104,integer,How many stars does Genymobile/scrcpy have?,146254,146254,1,
+edn-table-102,edn-table,sonnet,1,q61,integer,How many orders have a total greater than 600?,27,39,0,comprehension
+edn-table-103,edn-table,opus,3,q1,integer,What is the salary of Darla Mertz MD?,146288,146288,1,
+edn-table-104,edn-table,haiku,2,q51,integer,How many items are in order ORD-0016?,1,1,1,
+edn-table-105,edn-table,haiku,3,q35,integer,How many active employees work in Sales?,14,12,0,comprehension
+edn-table-106,edn-table,opus,1,q237,integer,How many log entries are in the dataset?,75,75,1,
+edn-table-107,edn-table,sonnet,2,q124,string,What is the level of the log at 2025-05-26T04:41:11.378Z?,warn,warn,1,
+edn-table-108,edn-table,sonnet,2,q81,integer,What is the total number of views across all dates?,326288,296846,0,comprehension
+edn-table-109,edn-table,sonnet,1,q20,integer,What is the average salary across all employees?,102543,105327.53,0,comprehension
+edn-table-110,edn-table,haiku,2,q157,integer,What is the connection pool idle timeout?,30000,30000,1,
+edn-table-111,edn-table,haiku,3,q81,integer,What is the total number of views across all dates?,326288,367356,0,comprehension
+edn-table-112,edn-table,opus,3,q218,string,What is the department of the last employee in the dataset?,HR,HR,1,
+edn-table-113,edn-table,opus,2,q32,integer,How many employees in Sales have more than 10 years of experience?,8,8,1,
+edn-table-114,edn-table,haiku,3,q195,string,What is the owner of the last flag (`flag_39_finding`) in the dataset?,Larissa,Larissa,1,
+edn-table-115,edn-table,haiku,3,q149,integer,"How many log entries for endpoint ""/api/products"" have a retryable error?",2,1,0,comprehension
+edn-table-116,edn-table,sonnet,3,q160,string,What is the version in the configuration?,0.2.20,0.2.20,1,
+edn-table-117,edn-table,sonnet,2,q60,integer,How many orders have a total greater than 400?,34,39,0,comprehension
+edn-table-118,edn-table,sonnet,2,q183,integer,What is the rollout percentage of flag `flag_9_toaster`?,38,38,1,
+edn-table-119,edn-table,opus,2,q90,integer,How many days had revenue greater than 1500 with views above 6000?,19,19,1,
+edn-table-primer-120,edn-table-primer,haiku,1,q182,boolean,Is flag `flag_6_toaster` enabled?,yes,true,1,
+edn-table-primer-121,edn-table-primer,sonnet,2,q91,integer,How many days had revenue greater than 2000 with views above 6000?,17,24,0,comprehension
+edn-table-primer-122,edn-table-primer,sonnet,2,q108,integer,What is the total number of stars across all repositories?,18455862,15903680,0,comprehension
+edn-table-primer-123,edn-table-primer,opus,1,q145,integer,"How many log entries have level ""error"" and status code >= 400?",26,26,1,
+edn-table-primer-124,edn-table-primer,haiku,1,q44,string,What is the customer name for order ORD-0002?,Gregoria Mosciski,Gregoria Mosciski,1,
+edn-table-primer-125,edn-table-primer,opus,1,q75,integer,What are the views for 2025-01-13?,5611,5611,1,
+edn-table-primer-126,edn-table-primer,haiku,3,q7,string,What department does Michaela Hettinger work in?,Engineering,Engineering,1,
+edn-table-primer-127,edn-table-primer,opus,1,q80,integer,How many days of data are in the dataset?,60,60,1,
+edn-table-primer-128,edn-table-primer,sonnet,3,q140,integer,"How many log entries are for endpoint ""/api/users""?",20,20,1,
+edn-table-primer-129,edn-table-primer,haiku,1,q236,integer,How many fields does each repository record have?,11,11,1,
+edn-table-primer-130,edn-table-primer,haiku,2,q96,integer,How many stars does codecrafters-io/build-your-own-x have?,530712,530712,1,
+edn-table-primer-131,edn-table-primer,haiku,2,q2,string,What department does Darnell Koss work in?,Marketing,Marketing,1,
+edn-table-primer-132,edn-table-primer,haiku,1,q193,csv-list-ordered,"List the field names for each flag (comma-separated, in order).","enabled,rollout,owner,updatedAt","enabled,rollout,owner,updatedAt",1,
+edn-table-primer-133,edn-table-primer,opus,1,q226,csv-list-ordered,"What are the field names for customer objects within orders (comma-separated, in order)?","id,name,email,phone","id,name,email,phone",1,
+edn-table-primer-134,edn-table-primer,sonnet,1,q34,integer,How many active employees work in Engineering?,14,9,0,comprehension
+edn-table-primer-135,edn-table-primer,opus,3,q146,integer,"How many log entries are for endpoint ""/api/products"" with status code >= 500?",3,3,1,
+edn-table-primer-136,edn-table-primer,opus,2,q33,integer,How many employees in Marketing have more than 10 years of experience?,10,10,1,
+edn-table-primer-137,edn-table-primer,opus,3,q57,integer,How many orders are in the dataset?,50,50,1,
+edn-table-primer-138,edn-table-primer,sonnet,2,q209,integer,How many contacts are in the dataset?,50,50,1,
+edn-table-primer-139,edn-table-primer,haiku,3,q28,integer,How many active employees have more than 5 years of experience?,60,67,0,comprehension
+edn-table-primer-140,edn-table-primer,opus,2,q107,integer,How many repositories are in the dataset?,100,100,1,
+edn-table-primer-141,edn-table-primer,opus,2,q199,string,What plan is Milan Kreiger on?,starter,starter,1,
+edn-table-primer-142,edn-table-primer,sonnet,2,q241,boolean,Is this data complete and valid? Answer only YES or NO.,NO,YES,0,comprehension
+edn-table-primer-143,edn-table-primer,opus,1,q149,integer,"How many log entries for endpoint ""/api/products"" have a retryable error?",2,2,1,
+edn-table-primer-144,edn-table-primer,sonnet,1,q19,integer,How many employees are in the dataset?,100,100,1,
+edn-table-primer-145,edn-table-primer,opus,2,q55,number,What is the total revenue across all orders?,36910.00,36910,1,
+edn-table-primer-146,edn-table-primer,haiku,3,q35,integer,How many active employees work in Sales?,14,13,0,comprehension
+edn-table-primer-147,edn-table-primer,opus,3,q163,integer,How many authentication providers are configured?,2,2,1,
+edn-table-primer-148,edn-table-primer,sonnet,1,q11,integer,What is the salary of Jerald Murray?,67666,67666,1,
+edn-table-primer-149,edn-table-primer,opus,1,q146,integer,"How many log entries are for endpoint ""/api/products"" with status code >= 500?",3,3,1,
+csv-150,csv,opus,2,q79,integer,What are the views for 2025-01-25?,5993,5993,1,
+csv-151,csv,opus,3,q12,string,What department does Madelyn Torphy work in?,Operations,Operations,1,
+csv-152,csv,haiku,1,q33,integer,How many employees in Marketing have more than 10 years of experience?,10,6,0,comprehension
+csv-153,csv,opus,3,q242,boolean,Is this data complete and valid? Answer only YES or NO.,NO,NO,1,
+csv-154,csv,haiku,1,q96,integer,How many stars does codecrafters-io/build-your-own-x have?,530712,530712,1,
+csv-155,csv,haiku,3,q76,number,What is the revenue for 2025-01-16?,7939.91,7939.91,1,
+csv-156,csv,haiku,2,q3,string,What is the email address of Freida Farrell?,omari33@hotmail.com,omari33@hotmail.com,1,
+csv-157,csv,haiku,3,q98,integer,How many watchers does react/react have?,6594,6594,1,
+csv-158,csv,haiku,2,q31,integer,How many employees in Engineering have more than 10 years of experience?,7,6,0,comprehension
+csv-159,csv,sonnet,3,q241,boolean,Is this data complete and valid? Answer only YES or NO.,NO,NO,1,
+csv-160,csv,opus,1,q115,integer,How many repositories have more than 200000 stars?,22,22,1,
+csv-161,csv,haiku,2,q25,integer,How many employees in Marketing have a salary greater than 80000?,12,4,0,comprehension
+csv-162,csv,opus,1,q12,string,What department does Madelyn Torphy work in?,Operations,Operations,1,
+csv-163,csv,opus,1,q89,integer,How many days had revenue greater than 1000 with views above 6000?,20,20,1,
+csv-164,csv,opus,2,q93,integer,How many days had more than 400 clicks and more than 15 conversions?,8,8,1,
+csv-165,csv,opus,1,q80,integer,How many days of data are in the dataset?,60,60,1,
+csv-166,csv,haiku,3,q81,integer,What is the total number of views across all dates?,326288,353673,0,comprehension
+csv-167,csv,opus,3,q11,integer,What is the salary of Jerald Murray?,67666,67666,1,
+csv-168,csv,opus,2,q94,integer,How many days had revenue greater than 1000 with bounce rate below 0.5?,26,26,1,
+csv-169,csv,opus,3,q80,integer,How many days of data are in the dataset?,60,60,1,
+csv-170,csv,haiku,3,q99,string,What is the main branch of ossu/computer-science?,master,master,1,
+csv-171,csv,sonnet,2,q71,integer,What are the views for 2025-01-01?,7646,7646,1,
+csv-172,csv,haiku,2,q98,integer,How many watchers does react/react have?,6594,6594,1,
+csv-173,csv,haiku,3,q20,integer,What is the average salary across all employees?,102543,106435,0,comprehension
+csv-174,csv,opus,2,q30,integer,How many active employees have more than 15 years of experience?,26,26,1,
+csv-175,csv,opus,2,q114,integer,How many repositories have more than 150000 stars?,53,53,1,
+csv-176,csv,opus,2,q220,integer,How many fields does each employee record have?,7,7,1,
+csv-177,csv,sonnet,1,q95,integer,How many days had revenue greater than 1500 with bounce rate below 0.5?,24,33,0,comprehension
+csv-178,csv,opus,3,q111,integer,"How many repositories use ""master"" as their default branch?",43,43,1,
+csv-179,csv,sonnet,1,q84,number,What is the average bounce rate?,0.49,0.4885,1,

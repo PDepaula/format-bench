@@ -46,7 +46,7 @@ export async function evaluateQuestion(
   const prompt = `
 ${format.primer}
 
-Given the following data in ${format.name} format:
+Given the following data in ${format.promptName ?? format.name} format:
 
 \`\`\`${format.fence}
 ${formattedData}
@@ -93,3 +93,36 @@ Answer:
     latencyMs,
   }
 }
+
+/**
+ * Batched variant of the upstream prompt used by the EDN study: identical
+ * template, with the single `Question:` line replaced by a numbered list and one
+ * extra answer-format line. The same text is used for every format.
+ */
+export function buildBatchPrompt(format: Format, formattedData: string, questions: Question[]): string {
+  const questionLines = questions.map((q, i) => `Q${i + 1}: ${q.prompt}`).join('\n')
+
+  return `
+${format.primer}
+
+Given the following data in ${format.promptName ?? format.name} format:
+
+\`\`\`${format.fence}
+${formattedData}
+\`\`\`
+
+Questions:
+${questionLines}
+
+Answer format requirements:
+- Answer each question on its own line as "Q<number>: <answer>", in order, with no other text
+- Do not show your work, reasoning or code
+- Provide only the value itself, no explanation
+- For numbers: output digits only (no commas, currency symbols, or units)
+- For dates/field names: use the exact string from the data
+- For lists: output comma-separated values with no spaces
+
+Answers:
+`.trim()
+}
+

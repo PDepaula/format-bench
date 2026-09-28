@@ -1,0 +1,21 @@
+family,tokenizer,long_primer_tokens,max_n,vs_json_no_primer,vs_json_with_primer,vs_toon_with_primer,vs_toon_no_primer,edn_table_minus_toon_per_record_at_max,json_minus_edn_table_per_record_at_max
+analytics,claude-5,206,100,9.1,8.2,never (<= 100),never (<= 100),2.09,25.7
+analytics,claude-haiku-4.5,159,100,13.7,12.7,never (<= 100),never (<= 100),2.04,12.81
+analytics,o200k,144,200,11.6,10.9,never (<= 200),never (<= 200),0.03,13.9
+analytics,qwen3,143,200,11.6,10.9,never (<= 200),never (<= 200),0.01,13.9
+employees,claude-5,206,100,10.6,9.6,never (<= 100),never (<= 100),5.07,21.74
+employees,claude-haiku-4.5,159,100,13.8,12.8,never (<= 100),never (<= 100),5.03,12.81
+employees,o200k,144,2000,13.5,12.7,never (<= 2000),never (<= 2000),2.55,11.99
+employees,qwen3,143,2000,13.5,12.7,never (<= 2000),never (<= 2000),2.66,11.99
+event-logs,claude-5,206,100,never (<= 100),never (<= 100),13.4,33.4,-6.4,0.95
+event-logs,claude-haiku-4.5,159,100,never (<= 100),never (<= 100),7.1,17.8,-9.34,-4.01
+event-logs,o200k,144,2000,never (<= 2000),never (<= 2000),6.8,15.1,-9.78,-3.0
+event-logs,qwen3,143,2000,never (<= 2000),never (<= 2000),6.5,14.9,-9.78,-4.0
+github,claude-5,206,100,5.6,5.1,never (<= 100),never (<= 100),8.7,45.88
+github,claude-haiku-4.5,159,100,8.0,7.5,never (<= 100),never (<= 100),8.57,24.11
+github,o200k,144,100,8.0,7.5,never (<= 100),never (<= 100),5.28,21.75
+github,qwen3,143,100,8.7,8.2,never (<= 100),never (<= 100),5.26,19.76
+orders,claude-5,206,100,17.4,15.9,never (<= 100),never (<= 100),7.37,12.96
+orders,claude-haiku-4.5,159,100,never (<= 100),never (<= 100),never (<= 100),never (<= 100),1.2,-6.34
+orders,o200k,144,500,never (<= 500),never (<= 500),19.0,47.5,-3.06,-4.71
+orders,qwen3,143,500,never (<= 500),never (<= 500),18.8,51.5,-2.83,-6.72

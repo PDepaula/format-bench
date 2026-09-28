@@ -1,0 +1,22 @@
+{
+ "team": "Core",
+ "members": [
+  {
+   "id": 1,
+   "name": "Ann",
+   "admin": true
+  },
+  {
+   "id": 2,
+   "name": "Bo",
+   "admin": false
+  }
+ ],
+ "settings": {
+  "theme": "dark",
+  "limits": [
+   10,
+   20
+  ]
+ }
+}

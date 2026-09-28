@@ -21,6 +21,7 @@
     "@faker-js/faker": "^10.5.0",
     "ai": "^7.0.37",
     "csv-stringify": "^6.8.1",
+    "edn-data": "^1.2.2",
     "fast-xml-parser": "^5.10.1",
     "gpt-tokenizer": "^3.4.0",
     "ofetch": "^1.5.1",

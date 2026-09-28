@@ -1,0 +1,102 @@
+# employees
+id,name,email,department,salary,yearsExperience,active
+1,Darla Mertz MD,vida80@yahoo.com,Engineering,146288,24,1
+2,Mr. Erick Renner DDS,sterling5@gmail.com,Sales,121468,17,
+3,Darnell Koss,christie.monahan@yahoo.com,Marketing,134103,13,
+4,Ms. Connie Pfeffer,forrest.fahey@hotmail.com,HR,141085,10,
+5,Freida Farrell,omari33@hotmail.com,Operations,139301,14,1
+6,Arne Larkin,mckayla.kihn@yahoo.com,Finance,98887,5,1
+7,Austin Morissette III,joyce_raynor41@gmail.com,Engineering,140443,13,1
+8,Mrs. Freddy Dare,marlen85@hotmail.com,Sales,50486,5,1
+9,Mrs. Janice Osinski,willis86@yahoo.com,Marketing,45011,13,1
+10,Clark Bernhard,ozella.ruecker@hotmail.com,HR,71242,8,1
+11,Rosie Bauch,rufus.okuneva62@hotmail.com,Operations,121951,22,1
+12,Cathy Funk,mackenzie.fadel3@hotmail.com,Finance,69202,5,1
+13,Michaela Hettinger,favian_rath80@yahoo.com,Engineering,71786,16,1
+14,Lula Schmeler,cicero2@yahoo.com,Sales,81463,11,1
+15,Brennon Parker,erik_metz@yahoo.com,Marketing,94913,20,1
+16,Mr. Jeremy Gulgowski,elinor68@yahoo.com,HR,60217,4,1
+17,Cody Bogisich,dedrick.gibson90@hotmail.com,Operations,133321,11,1
+18,Grady Mueller,ashley.heller52@gmail.com,Finance,149125,9,1
+19,Marvin Schaefer,mamie.stracke@hotmail.com,Engineering,143789,18,1
+20,Tobin Little,vicenta.yost75@gmail.com,Sales,130726,5,1
+21,Jerald Murray,asha_emard@hotmail.com,Marketing,67666,15,1
+22,Torrey Parisian,sam.schuster82@yahoo.com,HR,95659,6,1
+23,Madelyn Torphy,melissa29@gmail.com,Operations,49434,12,1
+24,Freda Smith,amaya_abbott@hotmail.com,Finance,92080,21,1
+25,Kay Witting,celine.trantow66@hotmail.com,Engineering,123879,24,1
+26,Rebekah Wyman,ursula.wolf@yahoo.com,Sales,100702,24,1
+27,Lorraine Jacobson,hoyt_okeefe@gmail.com,Marketing,135253,8,
+28,Kara Maggio-Shields,fritz_boyle@hotmail.com,HR,50455,21,1
+29,Russ Hane,scotty.herzog@gmail.com,Operations,80058,9,1
+30,Aubree Mante,penelope.mitchell77@yahoo.com,Finance,93687,15,1
+31,Naomie Hoeger,andre24@hotmail.com,Engineering,76308,15,1
+32,Jonathon Muller,estelle.monahan98@gmail.com,Sales,87619,24,1
+33,Ms. Patience Donnelly,jalen.weissnat@yahoo.com,Marketing,103807,5,1
+34,Niko Reilly IV,gwendolyn_ebert@yahoo.com,HR,145305,11,1
+35,Mackenzie Rau,jaeden_weimann98@gmail.com,Operations,122739,16,1
+36,Merle Mante,ashley93@gmail.com,Finance,47829,3,1
+37,Yasmin Johns,danny_ziemann84@yahoo.com,Engineering,136995,1,1
+38,Edgar Bernier,cortez_will95@gmail.com,Sales,72775,25,1
+39,Mark Blanda,erin27@hotmail.com,Marketing,62810,21,1
+40,Delbert Friesen IV,edd.spencer@hotmail.com,HR,84879,15,
+41,Evan Satterfield,susan_ferry@gmail.com,Operations,73248,23,1
+42,Martin Herman,karen_hirthe10@yahoo.com,Finance,127150,16,
+43,Delbert Olson,jake_gerhold12@hotmail.com,Engineering,63365,6,1
+44,Mrs. Filiberto Williamson,stewart.swaniawski30@gmail.com,Sales,102722,3,1
+45,Ollie Lakin,saige74@gmail.com,Marketing,75865,15,1
+46,Laney Nikolaus,karen32@yahoo.com,HR,130905,23,
+47,Lila Crist-Rosenbaum,ricardo14@gmail.com,Operations,130471,19,1
+48,Don Heller,duane85@gmail.com,Finance,135524,15,1
+49,Jasmine Walsh-Wyman,dwight_heidenreich54@yahoo.com,Engineering,76138,8,1
+50,Maybell Prohaska,calista_jakubowski-nolan83@yahoo.com,Sales,97602,24,1
+51,Angelo Satterfield,kristin.smith13@gmail.com,Marketing,136836,2,1
+52,Roxanne Abshire-MacGyver,mikayla.thiel-mohr@hotmail.com,HR,144944,10,1
+53,German Stoltenberg,stan_shields@hotmail.com,Operations,112564,24,1
+54,Mr. Sebastian Muller,shanelle_bartoletti81@yahoo.com,Finance,99578,8,1
+55,Irving Turcotte,regan34@yahoo.com,Engineering,121833,13,
+56,Molly Osinski,darrel_kulas65@gmail.com,Sales,74291,14,1
+57,Miss Maggie Yundt,aliza.pollich@yahoo.com,Marketing,122194,2,1
+58,Dallin Harris,celia.mraz58@yahoo.com,HR,108554,19,1
+59,Evangeline Ratke,freda.morissette@yahoo.com,Operations,145842,23,1
+60,Beverly Conroy,cassandra23@gmail.com,Finance,138165,14,1
+61,Ms. Samanta Torphy,philip.jenkins35@gmail.com,Engineering,82514,6,1
+62,Susie Reichel,robyn.barrows@gmail.com,Sales,139257,7,1
+63,Garry Upton I,lucas.roob72@gmail.com,Marketing,118333,3,1
+64,Cecil Jacobson,cedric_morissette27@hotmail.com,HR,89686,6,
+65,Evan Labadie,ike.skiles16@gmail.com,Operations,45564,8,1
+66,Katlyn Botsford,eduardo.morar1@hotmail.com,Finance,138643,25,1
+67,Troy Medhurst-D'Amore,marianne.homenick30@gmail.com,Engineering,140886,7,1
+68,Wm Russel,enos25@gmail.com,Sales,137685,10,1
+69,Helen Tillman,garry45@gmail.com,Marketing,138239,17,1
+70,Mathew Gusikowski,troy.kshlerin85@yahoo.com,HR,97658,4,1
+71,Sadie McClure,renee_bauch48@yahoo.com,Operations,67059,3,1
+72,Willis Leuschke,lora62@gmail.com,Finance,55772,24,1
+73,Leon Cummings,corrine_mclaughlin80@hotmail.com,Engineering,110109,6,
+74,Nicolas Boyer,ida.hartmann83@gmail.com,Sales,67642,23,
+75,Miss Gwen Turcotte,cody26@hotmail.com,Marketing,136754,19,1
+76,Eleanore Conroy,schuyler_dooley15@gmail.com,HR,95741,9,1
+77,Dianna Haag,jonas_gottlieb19@gmail.com,Operations,46974,17,1
+78,Jacob Nolan,darrin.bashirian40@yahoo.com,Finance,58864,5,1
+79,Drew Rohan,rosario_weber@yahoo.com,Engineering,97478,5,1
+80,Jodi Schroeder,ellen0@gmail.com,Sales,144744,6,1
+81,Miss Sydnie Hirthe,clark17@hotmail.com,Marketing,127293,3,1
+82,Nona Pfeffer,maggie.bartoletti@gmail.com,HR,66930,3,1
+83,Mr. Duane Bergnaum,armando99@hotmail.com,Operations,96890,17,
+84,Linda Powlowski,neal_pouros@yahoo.com,Finance,143962,17,1
+85,Leo Kuhn,jeremie_harber@hotmail.com,Engineering,60256,10,
+86,Judy Cruickshank,mckenna.hermiston@hotmail.com,Sales,100083,7,1
+87,Rudy Goyette,filiberto_hilpert@gmail.com,Marketing,75146,9,
+88,Sheldon Zemlak,heather_prohaska@yahoo.com,HR,70553,6,1
+89,Simon Nader,wendy.quigley30@hotmail.com,Operations,66055,14,1
+90,Katherine Effertz,jayce_franecki58@hotmail.com,Finance,129240,14,1
+91,Dr. Mathew Bayer,iris28@yahoo.com,Engineering,110507,4,1
+92,Thaddeus Volkman MD,elian_simonis62@yahoo.com,Sales,127085,8,
+93,Ramona Hessel IV,charlotte.hane@hotmail.com,Marketing,135294,18,
+94,Brent Orn,vernice.wisozk@yahoo.com,HR,115108,14,1
+95,Adrian Hyatt,rachel.hane@gmail.com,Operations,89145,2,1
+96,Raleigh Leuschke,natasha37@hotmail.com,Finance,120219,7,
+97,Winston Nolan,assunta_schuppe@yahoo.com,Engineering,126653,4,1
+98,Ken Block,delpha_dietrich@gmail.com,Sales,46830,2,1
+99,Filiberto Bernhard,darrin26@hotmail.com,Marketing,132908,18,1
+100,Aaron Vandervort,vera_huels@yahoo.com,HR,112023,2,1
